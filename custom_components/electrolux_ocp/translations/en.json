@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Electrolux / AEG (OCP Developer API)",
+        "description": "Create an API key and generate an Access Token and Refresh Token at https://developer.electrolux.one/dashboard, then paste all three values here. Keep these credentials secret.",
+        "data": {
+          "api_key": "API Key",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Electrolux / AEG",
+        "description": "Your tokens are no longer valid. Generate fresh tokens at https://developer.electrolux.one/dashboard and paste them here.",
+        "data": {
+          "api_key": "API Key",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed. Check the API key and tokens.",
+      "cannot_connect": "Could not connect to the Electrolux API.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "The Electrolux Developer API is rate-limited. Intervals below 120 seconds may cause errors.",
+        "data": {
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connectivity": {
+        "name": "Connection"
+      }
+    }
+  }
+}
