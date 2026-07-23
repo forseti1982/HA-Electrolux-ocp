@@ -18,7 +18,8 @@ const T = {
   aStart: 'Start', aPause: 'Pause', aResume: 'Fortsetzen', aStop: 'Stopp',
   qStart: D('Programm wirklich starten?'), qStop: D('Lauf wirklich abbrechen?'),
   yes: 'Ja', no: 'Abbrechen',
-  remoteOff: D('Fernsteuerung am Ger@228;t nicht aktiviert')
+  remoteOff: D('Fernsteuerung am Ger@228;t nicht aktiviert'),
+  remotePartial: D('Nur nicht-sicherheitsrelevante Befehle m@246;glich')
 };
 
 const PHASE_FRAC = [
@@ -108,7 +109,7 @@ if (!customElements.get('electrolux-ocp-card')) {
           demo: true, bucket: 'run', running: true, doorOpen: false, doorSince: null,
           program: this._demoSel, phase: D('Hauptw@228;sche'), timeTxt: '1:47', progress: 0.45,
           stateLabel: T.run, salt: { pct: 74, warn: false, txt: T.ok }, rinse: { pct: 12, warn: true, txt: T.low },
-          remote: true, hasCtrl: true, prog: { current: this._demoSel, list: this._progList },
+          remote: true, remoteMode: 'enabled', cmd: null, hasCtrl: true, prog: { current: this._demoSel, list: this._progList },
           opts, delay: { idx: this._demoDly },
           sig: 'demo|' + this._demoSel + '|' + this._demoOpt.join('') + '|' + this._demoDly + '|' + this._open + '|' + this._ctrl + '|' + this._confirm
         };
@@ -136,24 +137,51 @@ if (!customElements.get('electrolux-ocp-card')) {
       else if (phase) { const hit = PHASE_FRAC.find(p => p[0].test(phase)); progress = hit ? hit[1] : 0.3; }
       if (bucket === 'done') progress = 1;
 
-      let remote = !en.remote_control ? true : (() => { const o = this._st('remote_control'); return o ? this._bool(o.state) : false; })();
+      // remote_control ist ein STRING (ENABLED / NOT_SAFETY_RELEVANT_ENABLED /
+      // DISABLED). Fuer Rueckwaertskompatibilitaet wird auch eine bool-artige
+      // Fernsteuerung (on/off) korrekt interpretiert.
+      let remote = true, remoteMode = 'enabled';
+      if (en.remote_control) {
+        const o = this._st('remote_control');
+        const rv = (o ? String(o.state) : '').toUpperCase();
+        if (rv.indexOf('NOT_SAFETY') > -1) { remote = true; remoteMode = 'partial'; }
+        else if (rv === 'ENABLED' || rv === 'ON' || rv === 'TRUE' || rv === '1') { remote = true; remoteMode = 'enabled'; }
+        else { remote = false; remoteMode = 'disabled'; }
+      }
 
       let prog = null;
       if (en.program_select) {
         const o = this._st('program_select');
         prog = o ? { current: o.state, list: (o.attributes && Array.isArray(o.attributes.options)) ? o.attributes.options : [] } : { current: null, list: [] };
       }
-      const oc = en.options || {};
-      const map = [['hygiene_rinse', T.oHyg], ['extra_dry', T.oDry], ['intensive_zone', T.oZone]];
-      const opts = map.filter(x => oc[x[0]]).map(x => {
-        const o = this._hass && this._hass.states[oc[x[0]]];
-        return { label: x[1], entity: oc[x[0]], on: o ? this._bool(o.state) : false };
-      });
+      // Optionen: bevorzugt generische Liste option_switches:[{entity,label}];
+      // Fallback auf das alte options:{...}-Objekt (Rueckwaertskompatibilitaet).
+      let opts;
+      if (Array.isArray(en.option_switches)) {
+        opts = en.option_switches.filter(x => x && x.entity).map(x => {
+          const o = this._hass && this._hass.states[x.entity];
+          return { label: x.label || x.entity, entity: x.entity, on: o ? this._bool(o.state) : false };
+        });
+      } else {
+        const oc = en.options || {};
+        const map = [['hygiene_rinse', T.oHyg], ['extra_dry', T.oDry], ['intensive_zone', T.oZone]];
+        opts = map.filter(x => oc[x[0]]).map(x => {
+          const o = this._hass && this._hass.states[oc[x[0]]];
+          return { label: x[1], entity: oc[x[0]], on: o ? this._bool(o.state) : false };
+        });
+      }
       this._optRefs = opts;
       let delay = null;
       if (en.delay) { const o = this._st('delay'); let idx = 0; if (o) { const n = parseFloat(o.state); if (isFinite(n)) idx = n <= 0 ? 0 : (n <= 60 ? 1 : 2); } delay = { idx }; }
 
-      const hasCtrl = !!(en.program_select || opts.length || en.delay || en.start_button || en.pause_button || en.resume_button || en.stop_button);
+      // command_select: EIN Select fuer Start/Pause/Fortsetzen/Stopp. Es werden
+      // nur die tatsaechlich vorhandenen Kommando-Optionen aufgeloest.
+      let cmd = null;
+      if (en.command_select) {
+        cmd = { start: this._cmdOption('start'), pause: this._cmdOption('pause'), resume: this._cmdOption('resume'), stop: this._cmdOption('stop') };
+      }
+
+      const hasCtrl = !!(en.program_select || opts.length || en.delay || en.command_select || en.start_button || en.pause_button || en.resume_button || en.stop_button);
       const labels = { run: T.run, done: T.done, off: T.off, standby: T.standby, pause: T.pause, idle: T.idle, delayed: T.delayed };
       const m = {
         demo: false, bucket, running: bucket === 'run', doorOpen,
@@ -161,32 +189,69 @@ if (!customElements.get('electrolux-ocp-card')) {
         program: program || (prog && prog.current) || null, phase: phase || null, timeTxt, progress,
         stateLabel: doorOpen ? T.dOpen : labels[bucket],
         salt: this._level('salt', null), rinse: this._level('rinse', null),
-        remote, hasCtrl, prog, opts, delay
+        remote, remoteMode, cmd, hasCtrl, prog, opts, delay
       };
       m.sig = [bucket, doorOpen, timeTxt, m.program, phase, Math.round(progress * 100),
         m.salt && m.salt.pct, m.salt && m.salt.warn, m.rinse && m.rinse.pct, m.rinse && m.rinse.warn,
-        remote, prog && prog.current, opts.map(o => o.on ? 1 : 0).join(''), delay && delay.idx,
+        remoteMode, prog && prog.current, opts.map(o => o.on ? 1 : 0).join(''), delay && delay.idx,
+        cmd && [cmd.start, cmd.pause, cmd.resume, cmd.stop].map(c => c ? 1 : 0).join(''),
         this._open, this._ctrl, this._confirm].join('|');
       return m;
     }
 
     _actList(m) {
-      const dm = this._demo, en = this._ent, b = m.bucket;
-      const mk = (key, label, ck, ok, crit) => ({ key, label, show: dm || !!en[ck], enabled: ok && m.remote, crit });
+      const dm = this._demo, en = this._ent, b = m.bucket, cmd = m.cmd;
+      // Eine Aktion ist "verdrahtet", wenn sie ueber command_select verfuegbar
+      // ist ODER eine (Legacy-)Button-Entity konfiguriert ist ODER im Demo.
+      const wired = (ck, cmdKey) => dm || !!(cmd && cmd[cmdKey]) || !!en[ck];
+      const mk = (key, label, ck, cmdKey, buckets, crit) => ({
+        key, label, cmdKey,
+        show: wired(ck, cmdKey),
+        enabled: buckets.indexOf(b) > -1 && m.remote,
+        crit
+      });
+      // Zustandsabhaengige Freigabe (Buckets):
+      //   START  bei OFF/IDLE/READY_TO_START/END_OF_CYCLE
+      //   PAUSE  bei RUNNING
+      //   RESUME bei PAUSED
+      //   STOP   bei RUNNING/PAUSED/DELAYED_START/END_OF_CYCLE
       return [
-        mk('as', T.aStart, 'start_button', ['idle', 'off', 'ready'].indexOf(b) > -1, true),
-        mk('ap', T.aPause, 'pause_button', b === 'run', false),
-        mk('ar', T.aResume, 'resume_button', b === 'pause', false),
-        mk('ax', T.aStop, 'stop_button', ['pause', 'done', 'delayed'].indexOf(b) > -1, true)
+        mk('as', T.aStart, 'start_button', 'start', ['idle', 'off', 'ready', 'done'], true),
+        mk('ap', T.aPause, 'pause_button', 'pause', ['run'], false),
+        mk('ar', T.aResume, 'resume_button', 'resume', ['pause'], false),
+        mk('ax', T.aStop, 'stop_button', 'stop', ['run', 'pause', 'delayed', 'done'], true)
       ].filter(a => a.show);
     }
     _actEntity(k) { const e = this._ent; return { as: e.start_button, ap: e.pause_button, ar: e.resume_button, ax: e.stop_button }[k]; }
+    // Loese das tatsaechliche command_select-Options-Wort fuer ein logisches
+    // Kommando auf (Gross-/Kleinschreibung robust; kleine Alias-Liste).
+    _cmdOption(cmdKey) {
+      const id = this._ent.command_select, o = id && this._hass && this._hass.states[id];
+      const opts = (o && o.attributes && Array.isArray(o.attributes.options)) ? o.attributes.options : [];
+      const aliases = { start: ['START'], pause: ['PAUSE'], resume: ['RESUME'], stop: ['STOPRESET', 'STOP', 'RESET', 'ABORT'] }[cmdKey] || [];
+      for (let i = 0; i < aliases.length; i++) {
+        const hit = opts.find(x => String(x).toUpperCase() === aliases[i]);
+        if (hit != null) return hit;
+      }
+      return null;
+    }
     _call(id, service, extra) {
       if (!this._hass || !id || String(id).indexOf('.') < 0) return;
       const dom = id.split('.')[0];
       try { this._hass.callService(dom, service, Object.assign({ entity_id: id }, extra || {})); } catch (e) { /* ruhig */ }
     }
-    _runAct(k) { if (this._demo) return; const id = this._actEntity(k); if (id) this._call(id, 'press'); }
+    _runAct(k) {
+      if (this._demo) return;
+      const cmdKey = { as: 'start', ap: 'pause', ar: 'resume', ax: 'stop' }[k];
+      const cs = this._ent.command_select;
+      if (cs && cmdKey) {
+        const opt = this._cmdOption(cmdKey);
+        if (opt != null) { this._call(cs, 'select_option', { option: opt }); return; }
+      }
+      // Fallback: Legacy-Button-Entities (button.press)
+      const id = this._actEntity(k);
+      if (id) this._call(id, 'press');
+    }
     _pickProg(i) {
       if (this._demo) { this._demoSel = this._progList[i]; return; }
       const id = this._ent.program_select, o = id && this._hass && this._hass.states[id];
@@ -336,6 +401,7 @@ if (!customElements.get('electrolux-ocp-card')) {
         const off = !m.remote;
         let body = '';
         if (off) body += '<div class="hint"><span class="dot warn"></span>' + T.remoteOff + '</div>';
+        else if (m.remoteMode === 'partial') body += '<div class="hint soft">' + T.remotePartial + '</div>';
         if (m.prog && m.prog.list && m.prog.list.length) body += this._grp(T.prog, this._seg(m.prog.list, m.prog.current, 'p'));
         if (m.opts && m.opts.length) {
           const tg = m.opts.map((o, i) => '<div class="tgl" data-act="o' + i + '" role="button" tabindex="0" aria-pressed="' + o.on + '"><span class="k">' + esc(o.label) + '</span><span class="sw' + (o.on ? ' on' : '') + '"><i></i></span></div>').join('');
@@ -425,6 +491,7 @@ if (!customElements.get('electrolux-ocp-card')) {
         ".chev{color:#7d7d84;font-size:20px;font-weight:300;line-height:1}" +
         ".ctrl{display:flex;flex-direction:column;gap:16px;padding-top:4px}.ctrl.off{opacity:.42;pointer-events:none}" +
         ".hint{font-size:12px;letter-spacing:.3px;color:#ff9d2f;display:flex;gap:8px;align-items:center}" +
+        ".hint.soft{color:#8f8f96}" +
         ".grp{display:flex;flex-direction:column;gap:8px}" +
         ".seg{display:flex;flex-wrap:wrap;gap:8px}" +
         ".chip{font:inherit;font-size:13px;letter-spacing:.3px;color:#c7c7cd;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:9px 14px;min-height:40px;cursor:pointer}" +
