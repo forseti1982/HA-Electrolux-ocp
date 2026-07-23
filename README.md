@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🧺 Electrolux OCP for Home Assistant
+<img src="custom_components/electrolux_ocp/brand/logo.png" alt="Electrolux OCP" width="460">
+
+# Electrolux OCP for Home Assistant
 
 ### Electrolux & AEG appliances via the official OCP Developer API.
 

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 400" width="1240" height="400">
+  <title>Electrolux OCP - Logo (originale, neutrale Marke; generische Sans, NICHT die Electrolux-Hausschrift)</title>
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#373c45"/>
+      <stop offset="0.5" stop-color="#191d23"/>
+      <stop offset="1" stop-color="#0b0d10"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#474d57"/>
+      <stop offset="1" stop-color="#22262c"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <!-- Icon-Motiv (identisch zum quadratischen Icon), links skaliert -->
+  <g transform="translate(24,30) scale(0.66)">
+    <g fill="none" stroke="#ff1e6f" stroke-width="12" stroke-linecap="round">
+      <path d="M204 108 Q256 56 308 108"/>
+      <path d="M221 128 Q256 92 291 128"/>
+    </g>
+    <circle cx="256" cy="150" r="9" fill="#ff1e6f"/>
+    <ellipse cx="256" cy="446" rx="122" ry="20" fill="#000000" opacity="0.35" filter="url(#soft)"/>
+    <rect x="146" y="182" width="220" height="252" rx="26" fill="url(#body)" stroke="#4a505a" stroke-width="3"/>
+    <path d="M146 208 a26 26 0 0 1 26 -26 h168 a26 26 0 0 1 26 26 v20 h-220 z" fill="url(#panel)"/>
+    <rect x="146" y="226" width="220" height="6" fill="#000000" opacity="0.28"/>
+    <rect x="250" y="192" width="92" height="24" rx="6" fill="#07080b"/>
+    <rect x="253" y="195" width="86" height="18" rx="4" fill="#ff1e6f" opacity="0.16"/>
+    <rect x="260" y="201" width="46" height="6" rx="3" fill="#ff5c95"/>
+    <circle cx="176" cy="204" r="6" fill="#ff1e6f"/>
+    <circle cx="198" cy="204" r="6" fill="#3a3f47"/>
+    <circle cx="220" cy="204" r="6" fill="#3a3f47"/>
+    <rect x="176" y="248" width="160" height="12" rx="6" fill="url(#panel)"/>
+    <rect x="180" y="250" width="152" height="3" rx="1.5" fill="#ffffff" opacity="0.22"/>
+    <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.10">
+      <line x1="182" y1="300" x2="330" y2="300"/>
+      <line x1="182" y1="352" x2="330" y2="352"/>
+    </g>
+    <rect x="162" y="276" width="188" height="140" rx="16" fill="url(#sheen)" opacity="0.55"/>
+    <polygon points="300,276 332,276 226,416 194,416" fill="#ffffff" opacity="0.05"/>
+    <rect x="146" y="412" width="220" height="16" rx="8" fill="#000000" opacity="0.24"/>
+  </g>
+
+  <!-- Wortmarke: generische Sans (NICHT Electrolux-Hausschrift) -->
+  <text x="410" y="212" font-family="sans-serif" font-size="104" letter-spacing="1">
+    <tspan fill="#ececee" font-weight="300">Electrolux</tspan><tspan fill="#ff1e6f" font-weight="700"> OCP</tspan>
+  </text>
+  <text x="414" y="272" font-family="sans-serif" font-size="37" font-weight="500" letter-spacing="6" fill="#8b909a">VERNETZTES HAUSGER&#196;T</text>
+</svg>
