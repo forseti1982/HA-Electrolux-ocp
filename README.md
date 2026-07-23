@@ -5,8 +5,8 @@
 ### Electrolux & AEG appliances via the official OCP Developer API.
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/github/v/release/forseti1982/ha-electrolux-ocp?style=for-the-badge&color=ff8a3c)](https://github.com/forseti1982/ha-electrolux-ocp/releases)
-[![License](https://img.shields.io/github/license/forseti1982/ha-electrolux-ocp?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/forseti1982/HA-Electrolux-ocp?style=for-the-badge&color=ff8a3c)](https://github.com/forseti1982/HA-Electrolux-ocp/releases)
+[![License](https://img.shields.io/github/license/forseti1982/HA-Electrolux-ocp?style=for-the-badge)](LICENSE)
 [![Electrolux · AEG](https://img.shields.io/badge/Electrolux%20%C2%B7%20AEG-004B93?style=for-the-badge)](https://developer.electrolux.one)
 
 Bringt deine **Electrolux-/AEG-Geräte** über die **offizielle OCP Developer-API** ([developer.electrolux.one](https://developer.electrolux.one)) in Home Assistant — mit **API Key + Access Token + Refresh Token**.
@@ -56,7 +56,7 @@ flowchart LR
 ### Via HACS (empfohlen)
 
 1. **HACS → Drei-Punkte-Menü → Custom repositories**.
-2. URL `https://github.com/forseti1982/ha-electrolux-ocp`, Kategorie **Integration**, hinzufügen.
+2. URL `https://github.com/forseti1982/HA-Electrolux-ocp`, Kategorie **Integration**, hinzufügen.
 3. In HACS **„Electrolux OCP"** suchen und installieren.
 4. Home Assistant **neu starten**.
 
