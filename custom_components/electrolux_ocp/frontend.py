@@ -28,7 +28,8 @@ async def async_register_card(hass: HomeAssistant) -> None:
         return
 
     card_path = Path(__file__).parent / "frontend" / CARD_FILENAME
-    if not card_path.is_file():
+    # Dateisystem-Zugriff im Executor, um den Event-Loop nicht zu blockieren.
+    if not await hass.async_add_executor_job(card_path.is_file):
         _LOGGER.warning("Karten-Datei nicht gefunden, überspringe: %s", card_path)
         return
 

@@ -27,7 +27,8 @@
     },
     "abort": {
       "already_configured": "Dieses Konto ist bereits eingerichtet.",
-      "reauth_successful": "Die erneute Anmeldung war erfolgreich."
+      "reauth_successful": "Die erneute Anmeldung war erfolgreich.",
+      "wrong_account": "Diese Zugangsdaten gehören zu einem anderen Electrolux-Konto als dem, das neu angemeldet wird. Verwende Tokens desselben Kontos."
     }
   },
   "options": {

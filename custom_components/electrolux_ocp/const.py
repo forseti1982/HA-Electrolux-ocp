@@ -70,6 +70,10 @@ KNOWN_SENSOR_KEYS: Final[dict[str, tuple[str | None, str | None, str | None, boo
     "temperature": ("temperature", "°C", None, False),
 }
 
+# Verbrauchs-Keys: kumulativ → SensorStateClass.TOTAL_INCREASING (Langzeit-
+# statistik; vermeidet die "energy + measurement"-Warnung von Home Assistant).
+TOTAL_INCREASING_KEYS: Final = {"waterConsumption", "energyConsumption"}
+
 # Property-Keys, die als binary_sensor behandelt werden.
 # key -> (device_class, icon, entity_category_is_diagnostic)
 KNOWN_BINARY_KEYS: Final[dict[str, tuple[str | None, str | None, bool]]] = {

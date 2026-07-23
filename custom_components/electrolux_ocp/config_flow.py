@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     MIN_SCAN_INTERVAL,
 )
+from .util import scrub_secrets
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,8 +104,9 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
             except ValueError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unerwarteter Fehler bei der Validierung")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Unerwarteter Fehler bei der Validierung")
+                _LOGGER.debug("Detail: %s", scrub_secrets(str(err)))
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(fingerprint)
@@ -139,7 +141,7 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await _validate_credentials(
+                fingerprint = await _validate_credentials(
                     self.hass,
                     user_input[CONF_API_KEY],
                     user_input[CONF_ACCESS_TOKEN],
@@ -151,10 +153,19 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ValueError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unerwarteter Fehler bei der Reauth-Validierung")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Unerwarteter Fehler bei der Reauth-Validierung")
+                _LOGGER.debug("Detail: %s", scrub_secrets(str(err)))
                 errors["base"] = "unknown"
             else:
+                # Konto-Abgleich: die neuen Tokens müssen zum selben Konto gehören
+                # wie der Entry, sonst würde ein Entry still auf ein fremdes Konto
+                # umgebogen. Fingerprint = sortierte Appliance-IDs = unique_id.
+                if (
+                    reauth_entry.unique_id is not None
+                    and fingerprint != reauth_entry.unique_id
+                ):
+                    return self.async_abort(reason="wrong_account")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={

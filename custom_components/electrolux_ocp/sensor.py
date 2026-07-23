@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import KNOWN_BINARY_KEYS, KNOWN_SENSOR_KEYS
+from .const import KNOWN_BINARY_KEYS, KNOWN_SENSOR_KEYS, TOTAL_INCREASING_KEYS
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxEntity, get_reported, humanize
 
@@ -69,8 +69,13 @@ class ElectroluxSensor(ElectroluxEntity, SensorEntity):
                 self._attr_device_class = device_class
             if unit:
                 self._attr_native_unit_of_measurement = unit
-                # Für numerische Einheiten eine Measurement-State-Class setzen.
-                self._attr_state_class = SensorStateClass.MEASUREMENT
+                # Kumulative Verbrauchswerte -> TOTAL_INCREASING (Langzeitstatistik),
+                # sonst MEASUREMENT.
+                self._attr_state_class = (
+                    SensorStateClass.TOTAL_INCREASING
+                    if key in TOTAL_INCREASING_KEYS
+                    else SensorStateClass.MEASUREMENT
+                )
             if icon:
                 self._attr_icon = icon
             if diagnostic:

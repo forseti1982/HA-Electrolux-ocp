@@ -12,6 +12,9 @@ from .coordinator import ElectroluxConfigEntry
 from .entity import get_capabilities, get_reported
 
 # Felder, die niemals in Diagnostics/Logs auftauchen dürfen.
+# Achtung: async_redact_data redaktiert nur WERTE anhand ihrer Keys, niemals
+# Dict-Keys selbst. Deshalb werden die Geräte unten mit anonymen Keys
+# ("appliance_0", …) statt der echten Appliance-ID indexiert.
 TO_REDACT = {
     CONF_API_KEY,
     CONF_ACCESS_TOKEN,
@@ -19,9 +22,14 @@ TO_REDACT = {
     "accessToken",
     "refreshToken",
     "api_key",
+    "applianceId",
+    "deviceId",
     "serialNumber",
     "serial_number",
     "pnc",
+    "mac",
+    "macAddress",
+    "address",
     "email",
     "userId",
     "unique_id",
@@ -35,8 +43,12 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     appliances: dict[str, Any] = {}
-    for appliance_id, appliance in (coordinator.data or {}).items():
-        appliances[appliance_id] = {
+    # Sortiert + enumeriert: keine echte Geräte-/Serien-ID als Dict-Key (die von
+    # async_redact_data nicht erfasst würde). Reihenfolge deterministisch.
+    for idx, (_appliance_id, appliance) in enumerate(
+        sorted((coordinator.data or {}).items())
+    ):
+        appliances[f"appliance_{idx}"] = {
             "type": appliance.initial_data.get("applianceType"),
             "info": appliance.info_data,
             "capabilities": get_capabilities(appliance),

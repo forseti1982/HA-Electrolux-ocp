@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
+from typing import NoReturn
 
 from aiohttp import ClientResponseError
 from homeassistant.config_entries import ConfigEntry
@@ -21,8 +23,17 @@ from .const import (
     DOMAIN,
 )
 from .token_manager import ConfigEntryTokenManager
+from .util import scrub_secrets
 
 _LOGGER = logging.getLogger(__name__)
+
+# Timeout pro API-Interaktion (Sekunden).
+API_TIMEOUT = 30
+
+# Generische, secret-freie UI-Meldungen (Detail nur auf Debug, gescrubbt).
+_MSG_AUTH = "Authentifizierung fehlgeschlagen — Tokens prüfen"
+_MSG_RATE = "Rate-Limit der Electrolux-API erreicht (HTTP 429) — Poll-Intervall erhöhen"
+_MSG_TIMEOUT = "Zeitüberschreitung bei der Electrolux-API"
 
 type ElectroluxConfigEntry = ConfigEntry["ElectroluxDataUpdateCoordinator"]
 
@@ -52,23 +63,40 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
         # werden. Nur der State wird pro Zyklus neu geholt (rate-limit-schonend).
         self._appliances: dict[str, Appliance] = {}
 
+    def _raise_client_error(self, err: ClientResponseError, context: str) -> NoReturn:
+        """Bilde einen HTTP-Fehler auf eine generische HA-Exception ab.
+
+        Rohe Fremd-Fehlertexte werden NICHT in die UI gegeben; Detail landet nur
+        (gescrubbt) im Debug-Log. In die Meldung fließt nur der Status-Code.
+        """
+        if err.status in (401, 403):
+            raise ConfigEntryAuthFailed(_MSG_AUTH) from err
+        if err.status == 429:
+            raise UpdateFailed(_MSG_RATE) from err
+        _LOGGER.debug("HTTP-Fehler bei %s: %s", context, scrub_secrets(str(err)))
+        raise UpdateFailed(f"Fehler bei {context} (HTTP {err.status})") from err
+
+    def _raise_auth_from_value_error(self, err: ValueError) -> NoReturn:
+        """pyelectroluxgroup wirft ValueError bei fehlgeschlagenem Token-Refresh."""
+        _LOGGER.debug("Token-Refresh fehlgeschlagen: %s", scrub_secrets(str(err)))
+        raise ConfigEntryAuthFailed(_MSG_AUTH) from err
+
     async def _async_setup(self) -> None:
         """Einmalige Einrichtung: API-Client bauen und Geräteliste laden."""
         session = async_get_clientsession(self.hass)
         try:
-            self.api = ElectroluxHubAPI(session, self._token_manager)
-            appliances = await self.api.async_get_appliances()
+            async with asyncio.timeout(API_TIMEOUT):
+                self.api = ElectroluxHubAPI(session, self._token_manager)
+                appliances = await self.api.async_get_appliances()
         except ClientResponseError as err:
-            if err.status in (401, 403):
-                raise ConfigEntryAuthFailed(
-                    "Authentifizierung fehlgeschlagen — Tokens prüfen"
-                ) from err
-            raise UpdateFailed(f"Fehler beim Laden der Geräteliste: {err}") from err
+            self._raise_client_error(err, "Laden der Geräteliste")
         except ValueError as err:
-            # pyelectroluxgroup wirft ValueError, wenn der Token-Refresh scheitert.
-            raise ConfigEntryAuthFailed(str(err)) from err
+            self._raise_auth_from_value_error(err)
+        except TimeoutError as err:
+            raise UpdateFailed(_MSG_TIMEOUT) from err
         except Exception as err:  # noqa: BLE001
-            raise UpdateFailed(f"Unerwarteter Fehler beim Setup: {err}") from err
+            _LOGGER.debug("Unerwarteter Setup-Fehler: %s", scrub_secrets(str(err)))
+            raise UpdateFailed("Unerwarteter Fehler beim Setup") from err
 
         self._appliances = {appliance.id: appliance for appliance in appliances}
         _LOGGER.debug("OCP: %d Gerät(e) gefunden", len(self._appliances))
@@ -81,25 +109,18 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
 
         for appliance in self._appliances.values():
             try:
-                await appliance.async_update()
+                async with asyncio.timeout(API_TIMEOUT):
+                    await appliance.async_update()
             except ClientResponseError as err:
-                if err.status in (401, 403):
-                    raise ConfigEntryAuthFailed(
-                        "Authentifizierung fehlgeschlagen — Tokens prüfen"
-                    ) from err
-                if err.status == 429:
-                    raise UpdateFailed(
-                        "Rate-Limit der Electrolux-API erreicht (HTTP 429) — "
-                        "Poll-Intervall erhöhen"
-                    ) from err
-                raise UpdateFailed(
-                    f"Fehler beim Aktualisieren von {appliance.id}: {err}"
-                ) from err
+                self._raise_client_error(err, "Aktualisieren eines Geräts")
             except ValueError as err:
-                raise ConfigEntryAuthFailed(str(err)) from err
+                self._raise_auth_from_value_error(err)
+            except TimeoutError as err:
+                raise UpdateFailed(_MSG_TIMEOUT) from err
             except Exception as err:  # noqa: BLE001
-                raise UpdateFailed(
-                    f"Unerwarteter Fehler bei {appliance.id}: {err}"
-                ) from err
+                _LOGGER.debug(
+                    "Unerwarteter Update-Fehler: %s", scrub_secrets(str(err))
+                )
+                raise UpdateFailed("Unerwarteter Fehler beim Aktualisieren") from err
 
         return dict(self._appliances)
