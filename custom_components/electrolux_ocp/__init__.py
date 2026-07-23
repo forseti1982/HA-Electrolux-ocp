@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
+from .frontend import async_register_card
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -19,6 +20,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ElectroluxConfigEntry
 ) -> bool:
     """Richte einen Config-Entry ein."""
+    # Mitgelieferte Lovelace-Karte einmalig registrieren (installieren = Grafik).
+    await async_register_card(hass)
+
     coordinator = ElectroluxDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

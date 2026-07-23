@@ -27,6 +27,12 @@ MANUFACTURER: Final = "Electrolux Group"
 # Setup-URL für die Anleitung im Config-Flow
 DASHBOARD_URL: Final = "https://developer.electrolux.one/dashboard"
 
+# Mitgelieferte Lovelace-Karte (wird beim Setup automatisch registriert).
+# CARD_VERSION dient dem Cache-Busting — bei Änderung an der Karte erhöhen.
+CARD_VERSION: Final = "0.1.0"
+CARD_FILENAME: Final = "electrolux-ocp-card.js"
+CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
+
 # ---------------------------------------------------------------------------
 # Kuratierte Metadaten für bekannte Geräte-Eigenschaften ("reported"-Keys).
 #

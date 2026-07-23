@@ -80,6 +80,53 @@ Ordner `custom_components/electrolux_ocp` nach `config/custom_components/` kopie
 | Waschmaschine / Trockner / Luftreiniger / Klima | 🟠 generisch abgedeckt, community-verifiziert |
 | Schreibende Kommandos (`select`/`switch`) | 🟠 experimentell, `# VERIFY` |
 
+## 📇 Mitgelieferte Karte
+
+Die Integration bringt eine **plastische Geschirrspüler-Karte** mit
+(Metrology-Design, 3 Zustände: aus / läuft / fertig, inkl. Tür-Animation und
+Bedien-Oberfläche). Sie wird beim Setup **automatisch geladen** — kein separater
+HACS-Karten-Install und kein manuelles Hinzufügen einer Lovelace-Ressource
+nötig. Der Kartentyp `custom:electrolux-ocp-card` steht direkt zur Verfügung
+(auch im visuellen Karten-Picker mit Vorschau).
+
+> Nach der Installation ggf. **einmal den Browser-Cache leeren / hart neu laden**
+> (Strg/Cmd+Shift+R), damit das Frontend die neue Karte kennt.
+
+Die Karte ist **config-getrieben** und hat einen Demo-Fallback (zeigt ohne
+`entities` eine Demo-Ansicht). Beispiel-Konfiguration:
+
+```yaml
+type: custom:electrolux-ocp-card
+entities:
+  state: sensor.geschirrspuler_appliancestate      # Betriebszustand
+  running: binary_sensor.geschirrspuler_runningstate # läuft ja/nein
+  progress: sensor.geschirrspuler_progress          # Fortschritt 0-100 (optional)
+  phase: sensor.geschirrspuler_cyclephase           # aktuelle Phase
+  time_remaining: sensor.geschirrspuler_timetoend   # Restlaufzeit
+  door: binary_sensor.geschirrspuler_doorstate      # Türzustand
+  salt: sensor.geschirrspuler_saltlevel             # Salz-Füllstand/-Warnung
+  rinse: sensor.geschirrspuler_rinseaidlevel        # Klarspüler
+  remote_control: binary_sensor.geschirrspuler_remotecontrol  # Fernsteuerung aktiv
+  # --- Steuerung (nur falls die API Kommandos erlaubt) ---
+  program_select: select.geschirrspuler_program     # Programmwahl (nutzt attributes.options)
+  delay: number.geschirrspuler_startdelay           # Startvorwahl
+  start_button: button.geschirrspuler_start
+  pause_button: button.geschirrspuler_pause
+  resume_button: button.geschirrspuler_resume
+  stop_button: button.geschirrspuler_stop
+  options:
+    hygiene_rinse: switch.geschirrspuler_hygiene
+    extra_dry: switch.geschirrspuler_extra_dry
+    intensive_zone: switch.geschirrspuler_intensivzone
+```
+
+> [!NOTE]
+> Die **exakten Entity-Suffixe** hängen an den `# VERIFY`-Punkten und werden am
+> echten Gerät finalisiert (die Integration erzeugt Entitäten dynamisch aus den
+> gemeldeten Properties). Obiges Mapping ist ein Beispiel — passe die
+> Entity-IDs an die bei dir tatsächlich angelegten Entitäten an. Alle Felder
+> sind optional; nur vorhandene werden angezeigt.
+
 ## ⚠️ Disclaimer
 
 Inoffizielles Community-Projekt. Steht in **keiner** Verbindung zur Electrolux Group und wird von ihr weder unterstützt noch geprüft. „Electrolux" und „AEG" sind Marken ihrer jeweiligen Eigentümer. Nutzung auf eigene Verantwortung, ohne Gewähr.
