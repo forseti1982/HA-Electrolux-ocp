@@ -1,13 +1,20 @@
 {
   "domain": "electrolux_ocp",
   "name": "Electrolux OCP",
-  "codeowners": ["@forseti1982"],
+  "codeowners": [
+    "@forseti1982"
+  ],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": [
+    "frontend",
+    "http"
+  ],
   "documentation": "https://github.com/forseti1982/HA-Electrolux-ocp",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/forseti1982/HA-Electrolux-ocp/issues",
-  "requirements": ["pyelectroluxgroup==0.2.7"],
+  "requirements": [
+    "pyelectroluxgroup==0.2.7"
+  ],
   "version": "0.1.0"
 }

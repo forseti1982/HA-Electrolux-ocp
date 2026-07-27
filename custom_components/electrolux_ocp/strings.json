@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Electrolux / AEG (OCP Developer API)",
-        "description": "Create an API key and generate an Access Token and Refresh Token at https://developer.electrolux.one/dashboard, then paste all three values here. Keep these credentials secret.",
+        "description": "Create an API key and generate an Access Token and Refresh Token at {dashboard}, then paste all three values here. Keep these credentials secret.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
@@ -12,7 +12,7 @@
       },
       "reauth_confirm": {
         "title": "Re-authenticate Electrolux / AEG",
-        "description": "Your tokens are no longer valid. Generate fresh tokens at https://developer.electrolux.one/dashboard and paste them here.",
+        "description": "Your tokens are no longer valid. Generate fresh tokens at {dashboard} and paste them here.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",

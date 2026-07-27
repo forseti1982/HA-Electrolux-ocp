@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Electrolux / AEG (OCP Developer-API)",
-        "description": "Lege unter https://developer.electrolux.one/dashboard einen API Key an und erzeuge dort einen Access Token sowie einen Refresh Token. Trage alle drei Werte hier ein. Behandle diese Zugangsdaten vertraulich.",
+        "description": "Lege unter {dashboard} einen API Key an und erzeuge dort einen Access Token sowie einen Refresh Token. Trage alle drei Werte hier ein. Behandle diese Zugangsdaten vertraulich.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
@@ -12,7 +12,7 @@
       },
       "reauth_confirm": {
         "title": "Electrolux / AEG neu anmelden",
-        "description": "Deine Tokens sind nicht mehr gültig. Erzeuge unter https://developer.electrolux.one/dashboard neue Tokens und trage sie hier ein.",
+        "description": "Deine Tokens sind nicht mehr gültig. Erzeuge unter {dashboard} neue Tokens und trage sie hier ein.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",

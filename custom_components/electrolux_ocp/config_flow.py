@@ -124,6 +124,9 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "dashboard": "https://developer.electrolux.one/dashboard"
+            },
         )
 
     async def async_step_reauth(
@@ -179,6 +182,9 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "dashboard": "https://developer.electrolux.one/dashboard"
+            },
         )
 
     @staticmethod
