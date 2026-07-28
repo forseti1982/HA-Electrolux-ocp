@@ -16,6 +16,9 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # description/topics = Repo-Metadaten (About) - werden ausserhalb des Codes
+          # im GitHub-UI gesetzt; fuer dieses private Repo (nicht HACS-Default) ignoriert.
+          ignore: description topics
 
   hassfest:
     name: Hassfest validation
