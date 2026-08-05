@@ -20,7 +20,9 @@ from .const import TRANSLATED_SWITCH_KEYS
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import (
     ElectroluxEntity,
+    build_command,
     get_capabilities,
+    get_nested,
     get_reported,
     humanize,
     is_writable,
@@ -87,7 +89,10 @@ class ElectroluxSwitch(ElectroluxEntity, SwitchEntity):
         appliance = self.appliance
         if appliance is None:
             return None
-        value: Any = get_reported(appliance).get(self._key)
+        # reported spiegelt die Container-Struktur: Slash-Keys (z. B.
+        # ``userSelections/extraSilentOption``) liegen VERSCHACHTELT. get_nested
+        # navigiert die Segmente; ein flaches .get(slash_key) liefe ins Leere.
+        value: Any = get_nested(get_reported(appliance), self._key)
         if value is None:
             return None
         if isinstance(value, bool):
@@ -105,7 +110,10 @@ class ElectroluxSwitch(ElectroluxEntity, SwitchEntity):
         if appliance is None:
             raise HomeAssistantError("Gerät nicht verfügbar")
         try:
-            await appliance.send_command({self._key: state})
+            # OCP erwartet verschachtelte Container: ein Slash-Key MUSS als
+            # {"userSelections": {"extraSilentOption": state}} gesendet werden.
+            # Ein flacher {"userSelections/...": state}-Body wird abgelehnt.
+            await appliance.send_command(build_command(self._key, state))
         except Exception as err:  # noqa: BLE001
             raise HomeAssistantError(f"Kommando fehlgeschlagen: {err}") from err
         await self.coordinator.async_request_refresh()

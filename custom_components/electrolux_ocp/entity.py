@@ -47,6 +47,55 @@ def get_capabilities(appliance: Appliance) -> dict[str, Any]:
     return {}
 
 
+def build_command(key: str, value: Any) -> dict[str, Any]:
+    """Baue den OCP-Command-Body aus einem (evtl. slash-verschachtelten) Key.
+
+    Die Electrolux-OCP-API erwartet VERSCHACHTELTE Container: ein Capability-Key
+    wie ``userSelections/extraSilentOption`` MUSS als
+    ``{"userSelections": {"extraSilentOption": value}}`` gesendet werden. Ein
+    flacher Body ``{"userSelections/extraSilentOption": value}`` wird von der API
+    abgelehnt (``COMMAND_VALIDATION_ERROR: Capability not found``) und aeussert
+    sich am Geraet als HTTP 500 — auch bei fuer das Programm ERLAUBTEN Optionen.
+
+    Top-Level-Keys ohne ``/`` (z. B. ``executeCommand``, ``waterHardness``)
+    bleiben flach. Mehrsegmentige Pfade werden generisch von innen nach aussen
+    verschachtelt.
+
+    Beleg (verifiziert 2026-08):
+      * pyelectroluxgroup==0.2.7 appliance.send_command -> sendet ``json=command``
+        unveraendert an ``appliances/{id}/command``.
+      * TTLucian/ha-electrolux RELEASE_NOTES_v3.4.8 + switch.py/select.py/button.py:
+        ``command = {entity_source: {entity_attr: value}}`` (Split am ``/``),
+        flacher Body wird von der API mit "Capability not found" abgelehnt.
+    """
+    parts = [p for p in str(key).split("/") if p != ""]
+    if not parts:
+        return {}
+    body: Any = value
+    for part in reversed(parts):
+        body = {part: body}
+    return body
+
+
+def get_nested(data: Any, key: str) -> Any:
+    """Lies einen (evtl. slash-verschachtelten) Wert aus dem reported-State.
+
+    Der reported-State spiegelt die Container-Struktur der API: ein Key wie
+    ``userSelections/extraSilentOption`` liegt als ``reported["userSelections"]
+    ["extraSilentOption"]``. Ein flaches ``reported.get(key)`` mit dem Slash-Key
+    liefert daher faelschlich ``None``. Diese Funktion navigiert die Segmente.
+    """
+    cur: Any = data
+    for part in str(key).split("/"):
+        if part == "":
+            continue
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        else:
+            return None
+    return cur
+
+
 def is_writable(cap: Any) -> bool:
     """Prüfe, ob eine Capability schreibbar ist (access enthält 'write')."""
     if not isinstance(cap, dict):

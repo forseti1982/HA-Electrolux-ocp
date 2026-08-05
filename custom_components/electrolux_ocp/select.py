@@ -23,7 +23,9 @@ from .const import TRANSLATED_SELECT_KEYS
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import (
     ElectroluxEntity,
+    build_command,
     get_capabilities,
+    get_nested,
     get_reported,
     humanize,
     is_writable,
@@ -93,7 +95,8 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
         appliance = self.appliance
         if appliance is None:
             return None
-        value = get_reported(appliance).get(self._key)
+        # Slash-Keys liegen im reported-State verschachtelt (siehe get_nested).
+        value = get_nested(get_reported(appliance), self._key)
         if value is None:
             return None
         value = str(value)
@@ -105,7 +108,9 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
         if appliance is None:
             raise HomeAssistantError("Gerät nicht verfügbar")
         try:
-            await appliance.send_command({self._key: option})
+            # OCP erwartet verschachtelte Container fuer Slash-Keys, z. B.
+            # {"userSelections": {"programUID": option}}. Flacher Body -> Ablehnung.
+            await appliance.send_command(build_command(self._key, option))
         except Exception as err:  # noqa: BLE001
             raise HomeAssistantError(
                 f"Kommando fehlgeschlagen: {err}"

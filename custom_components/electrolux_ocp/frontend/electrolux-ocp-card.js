@@ -16,12 +16,103 @@ const T = {
   since: 'offen seit', ok: 'ok', low: 'niedrig', level: D('F@252;llstand'), demo: 'DEMO',
   warnIcon: D('@9888;'), lowRefill: D('niedrig \u2013 bitte nachf@252;llen'),
   oHyg: D('Hygiene-Sp@252;lung'), oDry: 'Extra-Trocknen', oZone: 'Intensivzone',
-  aStart: 'Start', aPause: 'Pause', aResume: 'Fortsetzen', aStop: 'Stopp',
+  aStart: 'Start', aPause: 'Pause', aResume: 'Fortsetzen', aStop: 'Stopp', aOn: 'Einschalten',
   qStart: D('Programm wirklich starten?'), qStop: D('Lauf wirklich abbrechen?'),
   yes: 'Ja', no: 'Abbrechen',
   remoteOff: D('Fernsteuerung am Ger@228;t nicht aktiviert'),
-  remotePartial: D('Nur nicht-sicherheitsrelevante Befehle m@246;glich')
+  remotePartial: D('Nur nicht-sicherheitsrelevante Befehle m@246;glich'),
+  info: 'Info',
+  // Grund-Texte, WARUM Optionen gerade gesperrt sind (nach applianceState).
+  // Optionen sind laut Geraet NUR in READY_TO_START schreibbar.
+  optNA: D('Nicht f@252;r dieses Programm'),
+  optPickProg: D('Erst ein Programm w@228;hlen'),
+  lockIdle: D('Maschine einschalten und Programm w@228;hlen'),
+  lockPaused: D('Pausiert @8211; fortsetzen oder abbrechen, um Optionen zu @228;ndern'),
+  lockRunning: D('L@228;uft @8211; Optionen w@228;hrend des Laufs gesperrt'),
+  lockEnded: D('Zyklus beendet @8211; Optionen gesperrt'),
+  lockDelayed: D('Startvorwahl aktiv @8211; Optionen gesperrt'),
+  lockAlarm: D('Ger@228;t meldet einen Hinweis @8211; Optionen gesperrt'),
+  lockUnknown: D('Optionen zurzeit nicht @228;nderbar')
 };
+
+// Programm (programUID) -> erlaubte Options-Schluessel (Suffix der Switch-Entity).
+// Quelle: Geraete-Rohdaten Modell GA60GLV. Nicht gelistete Programme -> keine Optionen.
+const PROG_OPTS = {
+  ECO: ['extra_silent_option', 'xtra_dry_option'],
+  AUTO: [],
+  QUICK30: ['extra_power_option', 'glass_care_option', 'one_rack_option', 'sanitize_option', 'spray_zone_option', 'zone_clean_option'],
+  QUICK60: ['extra_power_option', 'glass_care_option', 'one_rack_option', 'sanitize_option', 'spray_zone_option', 'xtra_dry_option', 'zone_clean_option'],
+  NORMAL90: ['extra_power_option', 'extra_silent_option', 'glass_care_option', 'sanitize_option', 'spray_zone_option', 'xtra_dry_option', 'zone_clean_option'],
+  '120_MIN': ['extra_power_option', 'extra_silent_option', 'glass_care_option', 'sanitize_option', 'spray_zone_option', 'xtra_dry_option', 'zone_clean_option'],
+  RINSE: [],
+  MACHINE_CARE: []
+};
+
+// Bekannte Options-Schluessel (laengste zuerst fuer robustes endsWith-Matching).
+const OPT_KEYS = ['extra_silent_option', 'extra_power_option', 'glass_care_option', 'zone_clean_option', 'spray_zone_option', 'sanitize_option', 'one_rack_option', 'xtra_dry_option'];
+
+// Klartext-Kurzlabels (falls die Karten-Konfig kein label mitgibt).
+const OPT_LABELS = {
+  extra_power_option: 'Extra Power', xtra_dry_option: 'Extra Trocknen',
+  glass_care_option: 'Glas-Schonung', sanitize_option: 'Hygiene',
+  spray_zone_option: D('Spr@252;hzone'), zone_clean_option: 'Zonenreinigung',
+  one_rack_option: '1 Korb', extra_silent_option: 'Extra Leise'
+};
+
+// Deutsche Kurzbeschreibungen fuer die "i"-Info (nach Electrolux/AEG-Handbuch,
+// sinngemaess umgangssprachlich). Umlaute NUR ueber @NNN;+D().
+const OPT_DESC = {
+  extra_power_option: D('H@246;herer Druck und h@246;here Temperatur f@252;r stark verschmutztes Geschirr wie T@246;pfe und Pfannen.'),
+  xtra_dry_option: D('Verl@228;ngerte, heissere Trockenphase f@252;r besseres Trocknen, vor allem bei Kunststoff.'),
+  glass_care_option: D('Schonende Temperatur und Druck f@252;r empfindliche Gl@228;ser.'),
+  sanitize_option: D('Zus@228;tzliche Hochtemperatur-Sp@252;lung zur Keimreduzierung und Hygiene.'),
+  spray_zone_option: D('Intensivere Reinigung in einer Spr@252;hzone des Unterkorbs f@252;r hartn@228;ckige Verschmutzung.'),
+  zone_clean_option: D('Intensivreinigung einer Zone bzw. halben Beladung.'),
+  one_rack_option: D('Nur ein Korb wird gesp@252;lt @8211; spart Wasser und Energie bei kleiner Beladung.'),
+  extra_silent_option: D('Leiserer, ruhigerer Lauf mit reduzierter Ger@228;uschentwicklung.')
+};
+
+// applianceState -> erlaubte Steuer-Kommandos (logische Keys). Quelle: Geraete-
+// Capabilities (applianceState-Triggers). Es werden NUR Kommandos angeboten, die
+// der aktuelle Zustand laut Geraet zulaesst -> nie ein stiller 500.
+const STATE_CMDS = {
+  OFF: ['on'], IDLE: ['on'],
+  READY_TO_START: ['start'],
+  DELAYED_START: ['stop'],
+  RUNNING: ['pause'],
+  PAUSED: ['resume', 'stop'],
+  END_OF_CYCLE: ['stop'],
+  ALARM: ['stop']
+};
+
+// Sperr-Grund je Zustand fuer die Optionen (nur READY_TO_START ist frei).
+function lockReason(appState) {
+  switch (appState) {
+    case 'READY_TO_START': return null;
+    case 'PAUSED': return T.lockPaused;
+    case 'RUNNING': return T.lockRunning;
+    case 'END_OF_CYCLE': return T.lockEnded;
+    case 'DELAYED_START': return T.lockDelayed;
+    case 'ALARM': return T.lockAlarm;
+    case 'OFF': case 'IDLE': case 'STANDBY': case '': return T.lockIdle;
+    default: return T.lockUnknown;
+  }
+}
+
+// Options-Schluessel robust aus der entity_id ableiten (endsWith gegen bekannte
+// Keys; Fallback: letztes Segment vor '_option'). NIE per Index.
+function optKeyFromEntity(entity) {
+  const id = String(entity == null ? '' : entity).toLowerCase();
+  for (let i = 0; i < OPT_KEYS.length; i++) { if (id.slice(-OPT_KEYS[i].length) === OPT_KEYS[i]) return OPT_KEYS[i]; }
+  const m = id.match(/([a-z0-9]+_option)$/);
+  return m ? m[1] : null;
+}
+
+// Rohen Programm-Key (programUID) so normalisieren, dass er zur PROG_OPTS-Matrix
+// passt (Grossbuchstaben). Unbekannt -> Optionen bleiben gesperrt (sicher).
+function normalizeProg(v) {
+  return v == null ? '' : String(v).toUpperCase().trim();
+}
 
 // Reihenfolge = Prioritaet (erste Regex gewinnt). Getestet gegen die ROHEN
 // Enum-Keys der cyclePhase (PREWASH/MAINWASH/COLDRINSE/HOTRINSE/EXTRARINSE/
@@ -46,7 +137,7 @@ if (!customElements.get('electrolux-ocp-card')) {
     constructor() {
       super();
       this.attachShadow({ mode: 'open' });
-      this._sig = null; this._open = null; this._ctrl = false; this._confirm = null; this._wasOpen = false;
+      this._sig = null; this._open = null; this._ctrl = false; this._confirm = null; this._wasOpen = false; this._optInfo = null;
       this.shadowRoot.addEventListener('click', e => this._tap(e));
       this.shadowRoot.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._tap(e); }
@@ -61,7 +152,7 @@ if (!customElements.get('electrolux-ocp-card')) {
       this._demoSel = this._progList[0];
       this._demoOpt = [true, true, false];
       this._demoDly = 0;
-      this._sig = null; this._open = null; this._ctrl = false; this._confirm = null; this._wasOpen = false;
+      this._sig = null; this._open = null; this._ctrl = false; this._confirm = null; this._wasOpen = false; this._optInfo = null;
       this._render();
     }
     getCardSize() { return 9; }
@@ -149,15 +240,22 @@ if (!customElements.get('electrolux-ocp-card')) {
     _model() {
       const dm = this._demo, en = this._ent;
       if (dm) {
-        const opts = [{ label: T.oHyg, on: this._demoOpt[0] }, { label: T.oDry, on: this._demoOpt[1] }, { label: T.oZone, on: this._demoOpt[2] }];
+        // Demo: READY_TO_START -> Optionen frei + "i"-Info zeigbar.
+        const dk = ['sanitize_option', 'xtra_dry_option', 'zone_clean_option'];
+        const opts = [
+          { label: T.oHyg, on: this._demoOpt[0], key: dk[0], desc: OPT_DESC[dk[0]], enabled: true, naText: '' },
+          { label: T.oDry, on: this._demoOpt[1], key: dk[1], desc: OPT_DESC[dk[1]], enabled: true, naText: '' },
+          { label: T.oZone, on: this._demoOpt[2], key: dk[2], desc: OPT_DESC[dk[2]], enabled: true, naText: '' }
+        ];
+        this._optRefs = opts;
         return {
-          demo: true, bucket: 'run', running: true, doorOpen: false, doorSince: null,
+          demo: true, bucket: 'run', running: true, doorOpen: false, doorSince: null, appState: 'READY_TO_START',
           program: this._demoSel, phase: D('Hauptw@228;sche'), timeTxt: '1:47', progress: 0.45,
           stateLabel: T.run, salt: { pct: 74, warn: false, txt: T.ok }, saltShown: true, saltLow: false,
           rinse: '8', rinseShown: true, rinseLow: true,
           remote: true, remoteMode: 'enabled', cmd: null, hasCtrl: true, prog: { current: this._demoSel, list: this._progList },
-          opts, delay: { idx: this._demoDly },
-          sig: 'demo|' + this._demoSel + '|' + this._demoOpt.join('') + '|' + this._demoDly + '|' + this._open + '|' + this._ctrl + '|' + this._confirm
+          opts, optLock: null, delay: { idx: this._demoDly },
+          sig: 'demo|' + this._demoSel + '|' + this._demoOpt.join('') + '|' + this._demoDly + '|' + this._open + '|' + this._ctrl + '|' + this._confirm + '|' + this._optInfo
         };
       }
       const rawState = (this._sv('state') || '').toLowerCase();
@@ -202,20 +300,46 @@ if (!customElements.get('electrolux-ocp-card')) {
         const o = this._st('program_select');
         prog = o ? { current: o.state, list: (o.attributes && Array.isArray(o.attributes.options)) ? o.attributes.options : [] } : { current: null, list: [] };
       }
+      // Roher applianceState (IDLE/READY_TO_START/RUNNING/PAUSED/...) und roher
+      // Programm-Key (programUID). BEIDE bewusst aus dem ROH-State (nicht der
+      // uebersetzten Anzeige), damit das Matrix-Matching stabil ist. Optionen sind
+      // laut Geraet NUR in READY_TO_START schreibbar (Live-verifiziert).
+      const appState = String(this._sv('state') || '').toUpperCase().trim();
+      let progKey = '';
+      const progCands = [this._sv('program'), this._sv('program_select')];
+      for (let i = 0; i < progCands.length; i++) { const k = normalizeProg(progCands[i]); if (PROG_OPTS[k]) { progKey = k; break; } }
+      if (!progKey) progKey = normalizeProg(progCands[0] || progCands[1]); // unbekannt -> gesperrt
+      const ready = appState === 'READY_TO_START';
+      const allowed = PROG_OPTS[progKey]; // undefined, wenn Programm unbekannt
+      // Sperr-Grund fuer die GANZE Options-Gruppe (Zustands- bzw. Programm-bedingt).
+      let optLock = null;
+      if (!ready) optLock = lockReason(appState);
+      else if (!allowed) optLock = T.optPickProg; // READY, aber Programm (noch) unbekannt
+
       // Optionen: bevorzugt generische Liste option_switches:[{entity,label}];
       // Fallback auf das alte options:{...}-Objekt (Rueckwaertskompatibilitaet).
       let opts;
       if (Array.isArray(en.option_switches)) {
         opts = en.option_switches.filter(x => x && x.entity).map(x => {
           const o = this._hass && this._hass.states[x.entity];
-          return { label: x.label || x.entity, entity: x.entity, on: o ? this._bool(o.state) : false };
+          const key = optKeyFromEntity(x.entity);
+          const inProg = !!(allowed && key && allowed.indexOf(key) > -1);
+          const enabled = ready && inProg; // NUR READY_TO_START + zum Programm passend
+          const naText = (ready && allowed && !inProg) ? T.optNA : '';
+          return {
+            label: x.label || (key && OPT_LABELS[key]) || x.entity, entity: x.entity,
+            on: o ? this._bool(o.state) : false, key, desc: key ? OPT_DESC[key] : null, enabled, naText
+          };
         });
       } else {
         const oc = en.options || {};
         const map = [['hygiene_rinse', T.oHyg], ['extra_dry', T.oDry], ['intensive_zone', T.oZone]];
+        // Legacy-Pfad ohne Slug-Ableitung: an den Zustand koppeln (nur READY frei),
+        // aber ohne Programm-Matrix (Keys unbekannt) -> im Zweifel sperren, wenn
+        // nicht READY. In READY erlauben (bestes verfuegbares Verhalten).
         opts = map.filter(x => oc[x[0]]).map(x => {
           const o = this._hass && this._hass.states[oc[x[0]]];
-          return { label: x[1], entity: oc[x[0]], on: o ? this._bool(o.state) : false };
+          return { label: x[1], entity: oc[x[0]], on: o ? this._bool(o.state) : false, key: null, desc: null, enabled: ready, naText: '' };
         });
       }
       this._optRefs = opts;
@@ -226,7 +350,7 @@ if (!customElements.get('electrolux-ocp-card')) {
       // nur die tatsaechlich vorhandenen Kommando-Optionen aufgeloest.
       let cmd = null;
       if (en.command_select) {
-        cmd = { start: this._cmdOption('start'), pause: this._cmdOption('pause'), resume: this._cmdOption('resume'), stop: this._cmdOption('stop') };
+        cmd = { on: this._cmdOption('on'), start: this._cmdOption('start'), pause: this._cmdOption('pause'), resume: this._cmdOption('resume'), stop: this._cmdOption('stop') };
       }
 
       const hasCtrl = !!(en.program_select || opts.length || en.delay || en.command_select || en.start_button || en.pause_button || en.resume_button || en.stop_button);
@@ -246,42 +370,50 @@ if (!customElements.get('electrolux-ocp-card')) {
       const rinseShown = !!(rinse != null || en.rinse_low);
 
       const m = {
-        demo: false, bucket, running: bucket === 'run', doorOpen,
+        demo: false, bucket, running: bucket === 'run', doorOpen, appState,
         doorSince: doorOpen ? this._since('door') : null,
         program: programDisp || (prog && prog.current) || null, phase: phaseDisp || null, timeTxt, progress,
         stateLabel: doorOpen ? T.dOpen : labels[bucket],
         salt, saltShown, saltLow, rinse, rinseShown, rinseLow,
-        remote, remoteMode, cmd, hasCtrl, prog, opts, delay
+        remote, remoteMode, cmd, hasCtrl, prog, opts, optLock, delay
       };
-      m.sig = [bucket, doorOpen, timeTxt, m.program, phase, Math.round(progress * 100),
+      m.sig = [bucket, appState, doorOpen, timeTxt, m.program, phase, Math.round(progress * 100),
         m.salt && m.salt.pct, m.salt && m.salt.warn, saltShown, saltLow, m.rinse, rinseShown, rinseLow,
-        remoteMode, prog && prog.current, opts.map(o => o.on ? 1 : 0).join(''), delay && delay.idx,
-        cmd && [cmd.start, cmd.pause, cmd.resume, cmd.stop].map(c => c ? 1 : 0).join(''),
-        this._open, this._ctrl, this._confirm].join('|');
+        remoteMode, prog && prog.current, opts.map(o => (o.on ? 1 : 0) + (o.enabled ? 'e' : 'd')).join(''), optLock || '', delay && delay.idx,
+        cmd && [cmd.on, cmd.start, cmd.pause, cmd.resume, cmd.stop].map(c => c ? 1 : 0).join(''),
+        this._open, this._ctrl, this._confirm, this._optInfo].join('|');
       return m;
     }
 
     _actList(m) {
       const dm = this._demo, en = this._ent, b = m.bucket, cmd = m.cmd;
-      // Eine Aktion ist "verdrahtet", wenn sie ueber command_select verfuegbar
-      // ist ODER eine (Legacy-)Button-Entity konfiguriert ist ODER im Demo.
-      const wired = (ck, cmdKey) => dm || !!(cmd && cmd[cmdKey]) || !!en[ck];
-      const mk = (key, label, ck, cmdKey, buckets, crit) => ({
-        key, label, cmdKey,
-        show: wired(ck, cmdKey),
-        enabled: buckets.indexOf(b) > -1 && m.remote,
-        crit
+      // Bevorzugt: EINE command_select-Entity, zustandsgetrieben. Es werden NUR
+      // Kommandos angeboten, die der aktuelle applianceState laut Geraete-
+      // Capabilities zulaesst (STATE_CMDS) UND die die Entity tatsaechlich fuehrt.
+      // So kann nie ein im Zustand unzulaessiges Kommando (z. B. Options-/START
+      // in PAUSED) einen 500 ausloesen.
+      if (!dm && en.command_select && cmd) {
+        const meta = {
+          on: { key: 'ao', label: T.aOn, crit: false },
+          start: { key: 'as', label: T.aStart, crit: true },
+          pause: { key: 'ap', label: T.aPause, crit: false },
+          resume: { key: 'ar', label: T.aResume, crit: false },
+          stop: { key: 'ax', label: T.aStop, crit: true }
+        };
+        const wanted = STATE_CMDS[m.appState] || [];
+        return wanted.filter(c => cmd[c]).map(c => ({ key: meta[c].key, label: meta[c].label, cmdKey: c, show: true, enabled: m.remote, crit: meta[c].crit }));
+      }
+      // Legacy-/Demo-Fallback: einzelne Button-Entities bzw. Demo -> bucketbasiert.
+      const wired = (ck) => dm || !!en[ck];
+      const mk = (key, label, ck, buckets, crit) => ({
+        key, label, show: wired(ck),
+        enabled: buckets.indexOf(b) > -1 && m.remote, crit
       });
-      // Zustandsabhaengige Freigabe (Buckets):
-      //   START  bei OFF/IDLE/READY_TO_START/END_OF_CYCLE
-      //   PAUSE  bei RUNNING
-      //   RESUME bei PAUSED
-      //   STOP   bei RUNNING/PAUSED/DELAYED_START/END_OF_CYCLE
       return [
-        mk('as', T.aStart, 'start_button', 'start', ['idle', 'off', 'ready', 'done'], true),
-        mk('ap', T.aPause, 'pause_button', 'pause', ['run'], false),
-        mk('ar', T.aResume, 'resume_button', 'resume', ['pause'], false),
-        mk('ax', T.aStop, 'stop_button', 'stop', ['run', 'pause', 'delayed', 'done'], true)
+        mk('as', T.aStart, 'start_button', ['idle', 'off', 'ready', 'done'], true),
+        mk('ap', T.aPause, 'pause_button', ['run'], false),
+        mk('ar', T.aResume, 'resume_button', ['pause'], false),
+        mk('ax', T.aStop, 'stop_button', ['run', 'pause', 'delayed', 'done'], true)
       ].filter(a => a.show);
     }
     _actEntity(k) { const e = this._ent; return { as: e.start_button, ap: e.pause_button, ar: e.resume_button, ax: e.stop_button }[k]; }
@@ -290,7 +422,7 @@ if (!customElements.get('electrolux-ocp-card')) {
     _cmdOption(cmdKey) {
       const id = this._ent.command_select, o = id && this._hass && this._hass.states[id];
       const opts = (o && o.attributes && Array.isArray(o.attributes.options)) ? o.attributes.options : [];
-      const aliases = { start: ['START'], pause: ['PAUSE'], resume: ['RESUME'], stop: ['STOPRESET', 'STOP', 'RESET', 'ABORT'] }[cmdKey] || [];
+      const aliases = { on: ['ON'], start: ['START'], pause: ['PAUSE'], resume: ['RESUME'], stop: ['STOPRESET', 'STOP', 'RESET', 'ABORT'] }[cmdKey] || [];
       for (let i = 0; i < aliases.length; i++) {
         const hit = opts.find(x => String(x).toUpperCase() === aliases[i]);
         if (hit != null) return hit;
@@ -304,7 +436,7 @@ if (!customElements.get('electrolux-ocp-card')) {
     }
     _runAct(k) {
       if (this._demo) return;
-      const cmdKey = { as: 'start', ap: 'pause', ar: 'resume', ax: 'stop' }[k];
+      const cmdKey = { as: 'start', ap: 'pause', ar: 'resume', ax: 'stop', ao: 'on' }[k];
       const cs = this._ent.command_select;
       if (cs && cmdKey) {
         const opt = this._cmdOption(cmdKey);
@@ -328,7 +460,11 @@ if (!customElements.get('electrolux-ocp-card')) {
     }
     _toggleOpt(i) {
       if (this._demo) { this._demoOpt[i] = !this._demoOpt[i]; return; }
-      const r = this._optRefs && this._optRefs[i]; if (r && r.entity) this._call(r.entity, 'toggle');
+      const r = this._optRefs && this._optRefs[i];
+      // Sicherheits-Guard: disabled (falscher Zustand/Programm) -> KEIN Command.
+      // Verhindert den Electrolux-500 auch bei einem verirrten Klick-Event.
+      if (!r || r.enabled === false) return;
+      if (r.entity) this._call(r.entity, 'toggle');
     }
     _tap(e) {
       let n = e.target, act = null;
@@ -336,6 +472,8 @@ if (!customElements.get('electrolux-ocp-card')) {
       if (!act) return;
       if (act === 'ct') { this._ctrl = !this._ctrl; return this._rerender(); }
       if (['door', 'prog', 'time', 'salt', 'rinse'].indexOf(act) > -1) { this._open = this._open === act ? null : act; return this._rerender(); }
+      // "i"-Info je Option: IMMER erlaubt (auch bei disabled/Remote aus) -> reine Anzeige.
+      if (act[0] === 'f') { const i = +act.slice(1); this._optInfo = this._optInfo === i ? null : i; return this._rerender(); }
       if (!this._model().remote) return;
       if (act === 'cn') { this._confirm = null; return this._rerender(); }
       if (act === 'cy') { const k = this._confirm; this._confirm = null; this._runAct(k); return this._rerender(); }
@@ -343,7 +481,7 @@ if (!customElements.get('electrolux-ocp-card')) {
       if (act[0] === 'd') { this._pickDelay(+act.slice(1)); return this._rerender(); }
       if (act[0] === 'o') { this._toggleOpt(+act.slice(1)); return this._rerender(); }
       if (act === 'as' || act === 'ax') { this._confirm = act; return this._rerender(); }
-      if (act === 'ap' || act === 'ar') { this._runAct(act); return this._rerender(); }
+      if (act === 'ap' || act === 'ar' || act === 'ao') { this._runAct(act); return this._rerender(); }
     }
 
     // ---- Plastische Grafik: gemeinsame Gradienten/Filter einmal in <defs> ----
@@ -466,7 +604,26 @@ if (!customElements.get('electrolux-ocp-card')) {
         else if (m.remoteMode === 'partial') body += '<div class="hint soft">' + T.remotePartial + '</div>';
         if (m.prog && m.prog.list && m.prog.list.length) body += this._grp(T.prog, this._seg(m.prog.list, m.prog.current, 'p'));
         if (m.opts && m.opts.length) {
-          const tg = m.opts.map((o, i) => '<div class="tgl" data-act="o' + i + '" role="button" tabindex="0" aria-pressed="' + o.on + '"><span class="k">' + esc(o.label) + '</span><span class="sw' + (o.on ? ' on' : '') + '"><i></i></span></div>').join('');
+          let tg = '';
+          // Ein Sperr-Grund fuer die ganze Gruppe (Zustand/Programm), z. B.
+          // "Pausiert ..." oder "Erst ein Programm waehlen".
+          if (m.optLock) tg += '<div class="ohint" role="note">' + m.optLock + '</div>';
+          tg += m.opts.map((o, i) => {
+            const dis = o.enabled === false;
+            const infoOpen = this._optInfo === i;
+            // "i"-Info-Affordanz: eigener data-act (bleibt auch bei disabled klickbar).
+            const info = o.desc ? '<button class="oi" data-act="f' + i + '" type="button" aria-label="' + T.info + '" aria-expanded="' + infoOpen + '">i</button>' : '';
+            const na = (dis && o.naText) ? '<span class="ona">' + o.naText + '</span>' : '';
+            // Disabled: KEIN data-act -> Tap loest keinen Toggle (kein Command/500),
+            // ausgegraut + aria-disabled. Enabled: normaler Toggle.
+            const rowAttrs = dis
+              ? ' aria-disabled="true"'
+              : ' data-act="o' + i + '" role="button" tabindex="0" aria-pressed="' + o.on + '"';
+            const oinfo = (infoOpen && o.desc) ? '<div class="oinfo">' + o.desc + '</div>' : '';
+            return '<div class="tgl' + (dis ? ' dis' : '') + '"' + rowAttrs + '>' +
+              '<span class="k">' + esc(o.label) + info + '</span>' +
+              '<span class="tglr">' + na + '<span class="sw' + (o.on ? ' on' : '') + '"><i></i></span></span></div>' + oinfo;
+          }).join('');
           body += this._grp(T.opts, tg);
         }
         if (m.delay) body += this._grp(T.delayLbl, this._seg(['Aus', '+1 Std', '+3 Std'], ['Aus', '+1 Std', '+3 Std'][m.delay.idx], 'd'));
@@ -569,7 +726,16 @@ if (!customElements.get('electrolux-ocp-card')) {
         ".seg{display:flex;flex-wrap:wrap;gap:8px}" +
         ".chip{font:inherit;font-size:13px;letter-spacing:.3px;color:#c7c7cd;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:9px 14px;min-height:40px;cursor:pointer}" +
         ".chip.on{color:#0b0b0d;background:#ff1e6f;border-color:#ff1e6f;font-weight:600}" +
-        ".tgl{display:flex;align-items:center;justify-content:space-between;min-height:44px;cursor:pointer;outline:none}" +
+        ".tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;cursor:pointer;outline:none}" +
+        ".tgl .k{display:inline-flex;align-items:center}" +
+        ".tglr{display:flex;align-items:center;gap:10px;flex:none}" +
+        // Ausgegraut + nicht klickbar (nur READY_TO_START + zum Programm passend ist frei).
+        ".tgl.dis{cursor:default}.tgl.dis .k,.tgl.dis .sw{opacity:.4}.tgl.dis .oi{opacity:1}" +
+        ".ona{font-size:11px;color:#8f8f96;letter-spacing:.2px;white-space:nowrap}" +
+        // "i"-Info-Affordanz (immer bedienbar, auch bei disabled).
+        ".oi{font:inherit;text-transform:none;font-style:italic;font-weight:700;font-size:11px;width:18px;height:18px;line-height:16px;text-align:center;color:#9aa0a8;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:50%;margin-left:8px;padding:0;flex:none;cursor:pointer}" +
+        ".oinfo{font-size:12.5px;line-height:1.5;color:#c2c2c8;background:rgba(255,255,255,.03);border-left:2px solid #ff9d2f;padding:8px 11px;border-radius:0 8px 8px 0}" +
+        ".ohint{font-size:12px;color:#ff9d2f;letter-spacing:.2px;line-height:1.4;padding:2px 0}" +
         ".sw{width:44px;height:24px;border-radius:13px;background:rgba(255,255,255,.13);position:relative;flex:none;transition:background .2s}" +
         ".sw.on{background:#ff1e6f}.sw>i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.sw.on>i{left:23px}" +
         ".acts{display:flex;flex-wrap:wrap;gap:10px}" +
