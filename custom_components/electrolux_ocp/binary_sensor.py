@@ -29,6 +29,37 @@ from .entity import ElectroluxEntity, get_reported, humanize, slugify_key
 
 _LOGGER = logging.getLogger(__name__)
 
+# Fest angelegte Alarm-Sensoren aus dem gemeldeten ``alerts``-Array. Sie werden
+# IMMER erzeugt (nicht nur bei aktivem Alarm), damit Automationen und die
+# Lovelace-Karte stabil darauf verweisen können.
+# (translation_key, unique_id-Suffix, Alarm-Code)
+ALERT_SENSORS: tuple[tuple[str, str, str], ...] = (
+    ("salt_missing", "alert_salt_missing", "DISH_ALARM_SALT_MISSING"),
+    ("rinse_aid_low", "alert_rinse_aid_low", "DISH_ALARM_RINSE_AID_LOW"),
+)
+
+
+def _alert_codes(appliance: Any) -> set[str]:
+    """Aktive Alarm-Codes aus ``reported['alerts']`` robust als Menge lesen.
+
+    Das Feld kann fehlen, ``None`` oder eine Liste aus Strings ODER Objekten
+    (mit ``code``/``alert``/``name``) sein. Im Zweifel: leere Menge.
+    """
+    if appliance is None:
+        return set()
+    raw = get_reported(appliance).get("alerts")
+    if not isinstance(raw, list):
+        return set()
+    codes: set[str] = set()
+    for item in raw:
+        if isinstance(item, str):
+            codes.add(item)
+        elif isinstance(item, dict):
+            code = item.get("code") or item.get("alert") or item.get("name")
+            if isinstance(code, str):
+                codes.add(code)
+    return codes
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,6 +73,14 @@ async def async_setup_entry(
     for appliance_id, appliance in coordinator.data.items():
         # Konnektivität immer anbieten.
         entities.append(ElectroluxConnectivitySensor(coordinator, appliance_id))
+
+        # Alarm-Sensoren (Salz fehlt / Klarspüler niedrig) IMMER anlegen.
+        for translation_key, uid_suffix, alert_code in ALERT_SENSORS:
+            entities.append(
+                ElectroluxAlertSensor(
+                    coordinator, appliance_id, translation_key, uid_suffix, alert_code
+                )
+            )
 
         reported = get_reported(appliance)
         for key, value in reported.items():
@@ -132,6 +171,33 @@ class ElectroluxBinarySensor(ElectroluxEntity, BinarySensorEntity):
             return _match(value, PROBLEM_TRUE_VALUES)
         # Fallback: Wahrheitswert aus String ableiten.
         return _match(value, {"ON", "TRUE", "OPEN", "ACTIVE", "RUNNING"})
+
+
+class ElectroluxAlertSensor(ElectroluxEntity, BinarySensorEntity):
+    """Fester Alarm-Sensor: on, wenn ein bestimmter Code in ``alerts`` steht.
+
+    device_class=problem => Home Assistant stellt on/off als Problem/OK dar. Der
+    Name kommt aus der Übersetzung (translation_key), folgt also der HA-Sprache.
+    """
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(
+        self,
+        coordinator: ElectroluxDataUpdateCoordinator,
+        appliance_id: str,
+        translation_key: str,
+        uid_suffix: str,
+        alert_code: str,
+    ) -> None:
+        super().__init__(coordinator, appliance_id)
+        self._alert_code = alert_code
+        self._attr_translation_key = translation_key
+        self._attr_unique_id = f"{appliance_id}_{uid_suffix}"
+
+    @property
+    def is_on(self) -> bool:
+        return self._alert_code in _alert_codes(self.appliance)
 
 
 def _match(value: Any, truthy: set[Any]) -> bool:

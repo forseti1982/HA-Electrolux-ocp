@@ -71,13 +71,14 @@
       "appliance_state": {
         "name": "État de l'appareil",
         "state": {
-          "IDLE": "Inactif",
+          "IDLE": "Prêt",
+          "READY_TO_START": "Prêt à démarrer",
           "RUNNING": "En marche",
           "PAUSED": "En pause",
-          "END_OF_CYCLE": "Cycle terminé",
           "DELAYED_START": "Départ différé",
+          "END_OF_CYCLE": "Terminé",
           "OFF": "Éteint",
-          "STANDBY": "Veille"
+          "ALARM": "Anomalie"
         }
       },
       "appliance_mode": {
@@ -92,17 +93,22 @@
         "name": "Phase du cycle",
         "state": {
           "PREWASH": "Prélavage",
-          "MAIN_WASH": "Lavage principal",
-          "RINSE": "Rinçage",
+          "MAINWASH": "Lavage principal",
+          "COLDRINSE": "Rinçage froid",
+          "HOTRINSE": "Rinçage",
+          "EXTRARINSE": "Rinçage supplémentaire",
           "DRYING": "Séchage",
-          "END": "Fin",
-          "NONE": "Aucune",
-          "UNKNOWN": "Inconnu"
+          "ADO_DRYING": "Séchage (porte auto)",
+          "UNAVAILABLE": "—"
         }
       },
       "water_hardness": {
         "name": "Dureté de l'eau",
         "state": {
+          "SOFT": "Douce",
+          "MEDIUM": "Moyenne",
+          "HARD": "Dure",
+          "STEP_0": "Niveau 0",
           "STEP_1": "Niveau 1",
           "STEP_2": "Niveau 2",
           "STEP_3": "Niveau 3",
@@ -119,24 +125,21 @@
         "name": "Son de fin de cycle",
         "state": {
           "NO_SOUND": "Aucun son",
-          "SHORT_SOUND": "Son court",
-          "LONG_SOUND": "Son long"
+          "SHORT_SOUND": "Son court"
         }
       },
       "display_on_floor": {
         "name": "Projection au sol",
         "state": {
           "GREEN": "Vert",
-          "RED": "Rouge",
           "OFF": "Éteint"
         }
       },
       "handle_free_door_opening": {
         "name": "Ouverture de porte sans poignée",
         "state": {
-          "SINGLE_PUSH": "Une pression",
-          "DOUBLE_PUSH": "Double pression",
-          "DISABLED": "Désactivé"
+          "OFF": "Éteint",
+          "SINGLE_PUSH": "Une pression"
         }
       },
       "network_interface_always_on": {
@@ -149,10 +152,10 @@
       "remote_control": {
         "name": "Commande à distance",
         "state": {
-          "ENABLED": "Activé",
           "DISABLED": "Désactivé",
-          "NOT_SAFETY_RELEVANT_ENABLED": "Activé (non critique)",
-          "SAFETY_RELEVANT_ENABLED": "Activé (critique de sécurité)"
+          "ENABLED": "Activé",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Partiel (commandes non critiques uniquement)",
+          "TEMPORARY_LOCKED": "Temporairement verrouillé"
         }
       },
       "display_light": {
@@ -172,7 +175,7 @@
         }
       },
       "rinse_aid_level": {
-        "name": "Niveau de liquide de rinçage"
+        "name": "Niveau de dosage du liquide de rinçage"
       },
       "start_time": {
         "name": "Heure de départ"
@@ -205,12 +208,22 @@
       },
       "water_hardness_sensor_enable": {
         "name": "Capteur de dureté d'eau"
+      },
+      "salt_missing": {
+        "name": "Sel manquant"
+      },
+      "rinse_aid_low": {
+        "name": "Liquide de rinçage bas"
       }
     },
     "select": {
       "water_hardness": {
         "name": "Dureté de l'eau",
         "state": {
+          "SOFT": "Douce",
+          "MEDIUM": "Moyenne",
+          "HARD": "Dure",
+          "STEP_0": "Niveau 0",
           "STEP_1": "Niveau 1",
           "STEP_2": "Niveau 2",
           "STEP_3": "Niveau 3",
@@ -227,24 +240,21 @@
         "name": "Son de fin de cycle",
         "state": {
           "NO_SOUND": "Aucun son",
-          "SHORT_SOUND": "Son court",
-          "LONG_SOUND": "Son long"
+          "SHORT_SOUND": "Son court"
         }
       },
       "display_on_floor": {
         "name": "Projection au sol",
         "state": {
           "GREEN": "Vert",
-          "RED": "Rouge",
           "OFF": "Éteint"
         }
       },
       "handle_free_door_opening": {
         "name": "Ouverture de porte sans poignée",
         "state": {
-          "SINGLE_PUSH": "Une pression",
-          "DOUBLE_PUSH": "Double pression",
-          "DISABLED": "Désactivé"
+          "OFF": "Éteint",
+          "SINGLE_PUSH": "Une pression"
         }
       },
       "network_interface_always_on": {
@@ -266,7 +276,17 @@
         }
       },
       "program_u_i_d": {
-        "name": "Programme"
+        "name": "Programme",
+        "state": {
+          "ECO": "Éco",
+          "AUTO": "Auto",
+          "QUICK30": "Rapide 30",
+          "QUICK60": "Rapide 60",
+          "NORMAL90": "Normal 90°",
+          "120_MIN": "120 minutes",
+          "RINSE": "Rinçage",
+          "MACHINE_CARE": "Entretien machine"
+        }
       }
     },
     "switch": {

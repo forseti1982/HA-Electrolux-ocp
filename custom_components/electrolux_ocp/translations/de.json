@@ -72,12 +72,13 @@
         "name": "Geräte-Status",
         "state": {
           "IDLE": "Bereit",
+          "READY_TO_START": "Startbereit",
           "RUNNING": "Läuft",
           "PAUSED": "Pausiert",
-          "END_OF_CYCLE": "Zyklus beendet",
-          "DELAYED_START": "Startverzögerung",
+          "DELAYED_START": "Startvorwahl",
+          "END_OF_CYCLE": "Fertig",
           "OFF": "Aus",
-          "STANDBY": "Standby"
+          "ALARM": "Störung"
         }
       },
       "appliance_mode": {
@@ -91,18 +92,23 @@
       "cycle_phase": {
         "name": "Zyklus-Phase",
         "state": {
-          "PREWASH": "Vorspülen",
-          "MAIN_WASH": "Hauptspülgang",
-          "RINSE": "Klarspülen",
+          "PREWASH": "Vorwäsche",
+          "MAINWASH": "Hauptwäsche",
+          "COLDRINSE": "Kaltspülen",
+          "HOTRINSE": "Klarspülen",
+          "EXTRARINSE": "Extra-Spülen",
           "DRYING": "Trocknen",
-          "END": "Ende",
-          "NONE": "Keine",
-          "UNKNOWN": "Unbekannt"
+          "ADO_DRYING": "Trocknen (Tür-Auto)",
+          "UNAVAILABLE": "—"
         }
       },
       "water_hardness": {
         "name": "Wasserhärte",
         "state": {
+          "SOFT": "Weich",
+          "MEDIUM": "Mittel",
+          "HARD": "Hart",
+          "STEP_0": "Stufe 0",
           "STEP_1": "Stufe 1",
           "STEP_2": "Stufe 2",
           "STEP_3": "Stufe 3",
@@ -119,24 +125,21 @@
         "name": "Signalton am Ende",
         "state": {
           "NO_SOUND": "Kein Ton",
-          "SHORT_SOUND": "Kurzer Ton",
-          "LONG_SOUND": "Langer Ton"
+          "SHORT_SOUND": "Kurzer Ton"
         }
       },
       "display_on_floor": {
         "name": "Boden-Projektion",
         "state": {
           "GREEN": "Grün",
-          "RED": "Rot",
           "OFF": "Aus"
         }
       },
       "handle_free_door_opening": {
         "name": "Griffloses Türöffnen",
         "state": {
-          "SINGLE_PUSH": "Einmal drücken",
-          "DOUBLE_PUSH": "Zweimal drücken",
-          "DISABLED": "Deaktiviert"
+          "OFF": "Aus",
+          "SINGLE_PUSH": "Einfacher Druck"
         }
       },
       "network_interface_always_on": {
@@ -149,10 +152,10 @@
       "remote_control": {
         "name": "Fernsteuerung",
         "state": {
-          "ENABLED": "Aktiviert",
           "DISABLED": "Deaktiviert",
-          "NOT_SAFETY_RELEVANT_ENABLED": "Aktiviert (nicht sicherheitsrelevant)",
-          "SAFETY_RELEVANT_ENABLED": "Aktiviert (sicherheitsrelevant)"
+          "ENABLED": "Aktiviert",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Teilweise (nur unkritische Befehle)",
+          "TEMPORARY_LOCKED": "Vorübergehend gesperrt"
         }
       },
       "display_light": {
@@ -172,7 +175,7 @@
         }
       },
       "rinse_aid_level": {
-        "name": "Klarspüler-Füllstand"
+        "name": "Klarspül-Dosierstufe"
       },
       "start_time": {
         "name": "Startzeit"
@@ -205,12 +208,22 @@
       },
       "water_hardness_sensor_enable": {
         "name": "Wasserhärte-Sensor"
+      },
+      "salt_missing": {
+        "name": "Salz fehlt"
+      },
+      "rinse_aid_low": {
+        "name": "Klarspüler niedrig"
       }
     },
     "select": {
       "water_hardness": {
         "name": "Wasserhärte",
         "state": {
+          "SOFT": "Weich",
+          "MEDIUM": "Mittel",
+          "HARD": "Hart",
+          "STEP_0": "Stufe 0",
           "STEP_1": "Stufe 1",
           "STEP_2": "Stufe 2",
           "STEP_3": "Stufe 3",
@@ -227,24 +240,21 @@
         "name": "Signalton am Ende",
         "state": {
           "NO_SOUND": "Kein Ton",
-          "SHORT_SOUND": "Kurzer Ton",
-          "LONG_SOUND": "Langer Ton"
+          "SHORT_SOUND": "Kurzer Ton"
         }
       },
       "display_on_floor": {
         "name": "Boden-Projektion",
         "state": {
           "GREEN": "Grün",
-          "RED": "Rot",
           "OFF": "Aus"
         }
       },
       "handle_free_door_opening": {
         "name": "Griffloses Türöffnen",
         "state": {
-          "SINGLE_PUSH": "Einmal drücken",
-          "DOUBLE_PUSH": "Zweimal drücken",
-          "DISABLED": "Deaktiviert"
+          "OFF": "Aus",
+          "SINGLE_PUSH": "Einfacher Druck"
         }
       },
       "network_interface_always_on": {
@@ -266,7 +276,17 @@
         }
       },
       "program_u_i_d": {
-        "name": "Programm"
+        "name": "Programm",
+        "state": {
+          "ECO": "Eco",
+          "AUTO": "Auto",
+          "QUICK30": "Schnell 30",
+          "QUICK60": "Schnell 60",
+          "NORMAL90": "Normal 90 Grad",
+          "120_MIN": "120 Minuten",
+          "RINSE": "Abspülen",
+          "MACHINE_CARE": "Maschinenpflege"
+        }
       }
     },
     "switch": {

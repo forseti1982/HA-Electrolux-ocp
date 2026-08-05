@@ -14,6 +14,7 @@ const T = {
   pause: 'pausiert', idle: 'bereit', delayed: 'Vorwahl aktiv',
   dOpen: D('T@252;r offen'), dClosed: D('T@252;r geschlossen'),
   since: 'offen seit', ok: 'ok', low: 'niedrig', level: D('F@252;llstand'), demo: 'DEMO',
+  warnIcon: D('@9888;'), lowRefill: D('niedrig \u2013 bitte nachf@252;llen'),
   oHyg: D('Hygiene-Sp@252;lung'), oDry: 'Extra-Trocknen', oZone: 'Intensivzone',
   aStart: 'Start', aPause: 'Pause', aResume: 'Fortsetzen', aStop: 'Stopp',
   qStart: D('Programm wirklich starten?'), qStop: D('Lauf wirklich abbrechen?'),
@@ -22,10 +23,23 @@ const T = {
   remotePartial: D('Nur nicht-sicherheitsrelevante Befehle m@246;glich')
 };
 
+// Reihenfolge = Prioritaet (erste Regex gewinnt). Getestet gegen die ROHEN
+// Enum-Keys der cyclePhase (PREWASH/MAINWASH/COLDRINSE/HOTRINSE/EXTRARINSE/
+// DRYING/ADO_DRYING) plus deutsche Fallbacks fuer den Demo-Modus.
 const PHASE_FRAC = [
-  [/vor/i, 0.12], [/haupt|main|wash/i, 0.45],
-  [/klar|rins|spuel/i, 0.75], [/trock|dry/i, 0.92]
+  [/prewash|vor/i, 0.12], [/mainwash|haupt|main/i, 0.45],
+  [/rinse|klar|spuel/i, 0.75], [/dry|trock/i, 0.98]
 ];
+
+// Umgangssprachlicher Fallback fuer Phasen/Programm, falls hass.formatEntityState
+// (der von HA in die Benutzersprache uebersetzte Anzeigewert) nicht verfuegbar
+// ist. Keys = echte cyclePhase-Enums. Umlaute NUR ueber @NNN;+D().
+const LOCALMAP = {
+  PREWASH: D('Vorw@228;sche'), MAINWASH: D('Hauptw@228;sche'),
+  COLDRINSE: D('Kaltsp@252;len'), HOTRINSE: D('Klarsp@252;len'),
+  EXTRARINSE: D('Extra-Sp@252;len'), DRYING: 'Trocknen',
+  ADO_DRYING: D('Trocknen (T@252;r-Auto)'), UNAVAILABLE: ''
+};
 
 if (!customElements.get('electrolux-ocp-card')) {
   class SpuelerCard extends HTMLElement {
@@ -70,7 +84,38 @@ if (!customElements.get('electrolux-ocp-card')) {
       return o;
     }
     _sv(key) { const o = this._st(key); return o ? o.state : null; }
+    // Von HA uebersetzter Anzeigewert (z.B. "Vorwaesche" statt "PREWASH").
+    // formatEntityState liefert den in der HA-Sprache uebersetzten State; als
+    // Fallback greift der interne LOCALMAP, sonst der rohe Wert.
+    _disp(key) {
+      const id = this._ent[key];
+      const stateObj = (this._hass && this._hass.states && id) ? this._hass.states[id] : null;
+      if (!stateObj) return null;
+      const raw = stateObj.state;
+      if (raw == null || raw === 'unavailable' || raw === 'unknown' || raw === '') return null;
+      const disp = (this._hass && this._hass.formatEntityState)
+        ? this._hass.formatEntityState(stateObj)
+        : (LOCALMAP[String(raw).toUpperCase()] || raw);
+      return (disp == null || disp === '') ? null : disp;
+    }
+    // Klarspueler als schlichte Zahl (kein Prozent, keine Warn-Logik).
+    _rinseVal() {
+      const o = this._st('rinse');
+      if (!o) return null;
+      const raw = String(o.state).trim();
+      const n = parseFloat(raw.replace(',', '.'));
+      if (raw !== '' && isFinite(n)) return String(Math.round(n));
+      return raw || null;
+    }
     _bool(s) { return ['on', 'true', '1', 'enabled', 'open', 'offen'].indexOf(String(s).toLowerCase()) > -1; }
+    // Optionaler Niedrig-Warnsensor (binary_sensor). true nur bei 'on'.
+    _binOn(key) { const o = this._st(key); return o ? this._bool(o.state) : false; }
+    // Grafische Niedrig-Warnung: Warn-Icon + optionaler Wert + Klartext.
+    _warnVal(levelTag) {
+      return '<span class="warncell"><span class="wi" aria-hidden="true">' + T.warnIcon + '</span>' +
+        (levelTag ? '<span class="tag w">' + levelTag + '</span>' : '') +
+        '<span class="wtxt">' + T.lowRefill + '</span></span>';
+    }
     _level(key, demo) {
       if (this._demo) return demo;
       const o = this._st(key);
@@ -108,7 +153,8 @@ if (!customElements.get('electrolux-ocp-card')) {
         return {
           demo: true, bucket: 'run', running: true, doorOpen: false, doorSince: null,
           program: this._demoSel, phase: D('Hauptw@228;sche'), timeTxt: '1:47', progress: 0.45,
-          stateLabel: T.run, salt: { pct: 74, warn: false, txt: T.ok }, rinse: { pct: 12, warn: true, txt: T.low },
+          stateLabel: T.run, salt: { pct: 74, warn: false, txt: T.ok }, saltShown: true, saltLow: false,
+          rinse: '8', rinseShown: true, rinseLow: true,
           remote: true, remoteMode: 'enabled', cmd: null, hasCtrl: true, prog: { current: this._demoSel, list: this._progList },
           opts, delay: { idx: this._demoDly },
           sig: 'demo|' + this._demoSel + '|' + this._demoOpt.join('') + '|' + this._demoDly + '|' + this._open + '|' + this._ctrl + '|' + this._confirm
@@ -118,7 +164,9 @@ if (!customElements.get('electrolux-ocp-card')) {
       const runEnt = this._sv('running');
       const timeTxt = this._fmtTime(this._sv('time_remaining'));
       const program = this._sv('program');
+      const programDisp = this._disp('program');
       const phase = this._sv('phase');
+      const phaseDisp = this._disp('phase');
       const doorOpen = this._bool((this._sv('door') || '').toLowerCase());
       const runByEnt = ['on', 'true', 'running'].indexOf(String(runEnt).toLowerCase()) > -1;
 
@@ -183,16 +231,30 @@ if (!customElements.get('electrolux-ocp-card')) {
 
       const hasCtrl = !!(en.program_select || opts.length || en.delay || en.command_select || en.start_button || en.pause_button || en.resume_button || en.stop_button);
       const labels = { run: T.run, done: T.done, off: T.off, standby: T.standby, pause: T.pause, idle: T.idle, delayed: T.delayed };
+
+      // Klarspueler-/Salz-Niedrigwarnung. Bevorzugt dedizierter binary_sensor
+      // (rinse_low/salt_low == 'on'); fuer Klarspueler ohne solchen Sensor als
+      // Heuristik der numerische Wert <= 2.
+      const salt = this._level('salt', null);
+      const rinse = this._rinseVal();
+      const rinseLow = en.rinse_low
+        ? this._binOn('rinse_low')
+        : (rinse != null && isFinite(parseFloat(rinse)) && parseFloat(rinse) <= 2);
+      const saltLow = en.salt_low ? this._binOn('salt_low') : false;
+      // SALZ nur zeigen, wenn ein Salz-Wert ODER ein salt_low-Sensor da ist.
+      const saltShown = !!(salt || en.salt_low);
+      const rinseShown = !!(rinse != null || en.rinse_low);
+
       const m = {
         demo: false, bucket, running: bucket === 'run', doorOpen,
         doorSince: doorOpen ? this._since('door') : null,
-        program: program || (prog && prog.current) || null, phase: phase || null, timeTxt, progress,
+        program: programDisp || (prog && prog.current) || null, phase: phaseDisp || null, timeTxt, progress,
         stateLabel: doorOpen ? T.dOpen : labels[bucket],
-        salt: this._level('salt', null), rinse: this._level('rinse', null),
+        salt, saltShown, saltLow, rinse, rinseShown, rinseLow,
         remote, remoteMode, cmd, hasCtrl, prog, opts, delay
       };
       m.sig = [bucket, doorOpen, timeTxt, m.program, phase, Math.round(progress * 100),
-        m.salt && m.salt.pct, m.salt && m.salt.warn, m.rinse && m.rinse.pct, m.rinse && m.rinse.warn,
+        m.salt && m.salt.pct, m.salt && m.salt.warn, saltShown, saltLow, m.rinse, rinseShown, rinseLow,
         remoteMode, prog && prog.current, opts.map(o => o.on ? 1 : 0).join(''), delay && delay.idx,
         cmd && [cmd.start, cmd.pause, cmd.resume, cmd.stop].map(c => c ? 1 : 0).join(''),
         this._open, this._ctrl, this._confirm].join('|');
@@ -306,8 +368,8 @@ if (!customElements.get('electrolux-ocp-card')) {
       const disp = run ? (m.timeTxt || '0:00') : (m.bucket === 'off' ? '' : '--:--');
       const dCol = run ? '#ff5c95' : '#5b626c';
       const pw = run ? '#ff1e6f' : (m.bucket === 'off' ? '#2a2e34' : '#41474f');
-      const salt = (m.salt && m.salt.warn) ? '#ff9d2f' : '#3a3f47';
-      const rinse = (m.rinse && m.rinse.warn) ? '#ff9d2f' : '#3a3f47';
+      const salt = ((m.salt && m.salt.warn) || m.saltLow) ? '#ff4d6a' : '#3a3f47';
+      const rinse = m.rinseLow ? '#ff4d6a' : '#3a3f47';
       return '<ellipse cx="120" cy="322" rx="94" ry="12" fill="#000" opacity="0.55" filter="url(#sh)"/>' +
         '<rect x="40" y="14" width="160" height="300" rx="12" fill="url(#gb)" stroke="#4a505a" stroke-width="1.2"/>' +
         '<rect x="40" y="14" width="160" height="44" rx="12" fill="url(#gs)"/>' +
@@ -379,8 +441,8 @@ if (!customElements.get('electrolux-ocp-card')) {
       if (k === 'door') t = (m.doorOpen ? T.dOpen : T.dClosed) + (m.doorSince ? ' \u2013 ' + T.since + ' ' + esc(m.doorSince) : '');
       else if (k === 'prog') t = T.prog + ': ' + esc(m.program || '\u2014') + '  \u2013  ' + T.phase + ': ' + esc(m.phase || '\u2014');
       else if (k === 'time') t = m.running ? (T.rest + ': ' + esc(m.timeTxt || '\u2014')) : esc(m.stateLabel);
-      else if (k === 'salt') t = T.salt + ' \u2013 ' + T.level + ': ' + (m.salt ? esc(m.salt.txt) : '\u2014');
-      else if (k === 'rinse') t = T.rinse + ' \u2013 ' + T.level + ': ' + (m.rinse ? esc(m.rinse.txt) : '\u2014');
+      else if (k === 'salt') t = T.salt + (m.salt ? ' \u2013 ' + T.level + ': ' + esc(m.salt.txt) : '') + (m.saltLow ? ' \u2013 ' + T.lowRefill : '');
+      else if (k === 'rinse') t = T.rinse + ': ' + (m.rinse ? esc(m.rinse) : '\u2014') + (m.rinseLow ? ' \u2013 ' + T.lowRefill : '');
       return '<div class="det">' + t + '</div>';
     }
     _row(act, k, inner, cls) {
@@ -427,10 +489,18 @@ if (!customElements.get('electrolux-ocp-card')) {
       this._wasOpen = m.doorOpen;
       const heroBig = m.running;
       const hero = m.running ? esc(m.timeTxt || '\u2014') : esc(m.stateLabel);
-      const dotCls = m.bucket === 'run' ? 'run' : ((m.doorOpen || (m.rinse && m.rinse.warn) || (m.salt && m.salt.warn)) ? 'warn' : '');
+      const dotCls = m.bucket === 'run' ? 'run' : ((m.doorOpen || m.rinseLow || m.saltLow || (m.salt && m.salt.warn)) ? 'warn' : '');
       const pill = m.doorOpen ? T.dOpen : m.stateLabel;
-      const saltV = m.salt ? (this._bar(m.salt.pct, m.salt.warn) + '<span class="tag' + (m.salt.warn ? ' w' : '') + '">' + esc(m.salt.txt) + '</span>') : '\u2014';
-      const rinseV = m.rinse ? (this._bar(m.rinse.pct, m.rinse.warn) + '<span class="tag' + (m.rinse.warn ? ' w' : '') + '">' + esc(m.rinse.txt) + '</span>') : '\u2014';
+      // SALZ: bei Niedrigwarnung grafische Warnung, sonst Fuellstands-Gauge (falls
+      // ein Salz-Wert vorliegt), sonst schlichtes "ok" (nur salt_low konfiguriert).
+      let saltV;
+      if (m.saltLow) saltV = this._warnVal(m.salt ? esc(m.salt.txt) : '');
+      else if (m.salt) saltV = this._bar(m.salt.pct, m.salt.warn) + '<span class="tag' + (m.salt.warn ? ' w' : '') + '">' + esc(m.salt.txt) + '</span>';
+      else saltV = '<span class="tag">' + T.ok + '</span>';
+      // KLARSPUELER: schlichte Zahl; bei Niedrigwarnung grafische Warnung.
+      const rinseV = m.rinseLow
+        ? this._warnVal(m.rinse ? esc(m.rinse) : '')
+        : (m.rinse ? ('<span class="tag">' + esc(m.rinse) + '</span>') : '\u2014');
 
       sr.innerHTML =
         '<style>' + this._css() + '</style>' +
@@ -447,8 +517,8 @@ if (!customElements.get('electrolux-ocp-card')) {
         '<div class="rows">' +
         this._row('prog', T.prog, esc(m.program || '\u2014')) +
         this._row('time', T.phase, esc(m.phase || '\u2014'), m.running ? 'v acc' : 'v') +
-        this._row('salt', T.salt, saltV, 'fv') +
-        this._row('rinse', T.rinse, rinseV, 'fv') +
+        (m.saltShown ? this._row('salt', T.salt, saltV, 'fv') : '') +
+        (m.rinseShown ? this._row('rinse', T.rinse, rinseV, 'fv') : '') +
         '</div></div></div>' +
         this._detail(m) +
         this._ctrlBlock(m) +
@@ -485,7 +555,10 @@ if (!customElements.get('electrolux-ocp-card')) {
         ".fv{display:flex;align-items:center;gap:10px}" +
         ".gauge{width:56px;height:5px;border-radius:3px;background:rgba(255,255,255,.09);overflow:hidden;flex:none}" +
         ".gauge>i{display:block;height:100%;background:#dcdce0;border-radius:3px}" +
-        ".tag{font-size:12px;letter-spacing:.5px;color:#a9a9af;min-width:34px;text-align:right}.tag.w{color:#ff9d2f}" +
+        ".tag{font-size:12px;letter-spacing:.5px;color:#a9a9af;min-width:34px;text-align:right}.tag.w{color:#ff4d6a}" +
+        ".warncell{display:flex;align-items:center;gap:8px;justify-content:flex-end;color:#ff4d6a;min-width:0}" +
+        ".warncell .wi{font-size:15px;line-height:1;flex:none}" +
+        ".warncell .wtxt{font-size:11.5px;letter-spacing:.2px;color:#ff4d6a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
         ".det{margin-top:12px;font-size:13px;color:#c2c2c8;background:rgba(255,255,255,.03);border-left:2px solid #ff1e6f;padding:10px 13px;border-radius:0 8px 8px 0;line-height:1.5}" +
         ".ctrl-hd{display:flex;align-items:center;justify-content:space-between;margin-top:8px;min-height:44px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);cursor:pointer;outline:none}" +
         ".chev{color:#7d7d84;font-size:20px;font-weight:300;line-height:1}" +
@@ -513,8 +586,8 @@ if (!customElements.get('electrolux-ocp-card')) {
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: 'electrolux-ocp-card',
-    name: 'Electrolux OCP - Geschirrspueler',
-    description: 'Plastische Live-Grafik + Bedien-Oberflaeche fuer Electrolux/AEG Geschirrspueler (Metrology).',
+    name: D('Electrolux OCP - Geschirrsp@252;ler'),
+    description: D('Plastische Live-Grafik + Bedien-Oberfl@228;che f@252;r Electrolux/AEG Geschirrsp@252;ler (Metrology).'),
     preview: true
   });
 }

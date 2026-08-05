@@ -71,13 +71,14 @@
       "appliance_state": {
         "name": "Estado del aparato",
         "state": {
-          "IDLE": "Inactivo",
+          "IDLE": "Listo",
+          "READY_TO_START": "Listo para iniciar",
           "RUNNING": "En marcha",
           "PAUSED": "En pausa",
-          "END_OF_CYCLE": "Ciclo terminado",
           "DELAYED_START": "Inicio diferido",
+          "END_OF_CYCLE": "Terminado",
           "OFF": "Apagado",
-          "STANDBY": "Reposo"
+          "ALARM": "Avería"
         }
       },
       "appliance_mode": {
@@ -92,17 +93,22 @@
         "name": "Fase del ciclo",
         "state": {
           "PREWASH": "Prelavado",
-          "MAIN_WASH": "Lavado principal",
-          "RINSE": "Aclarado",
+          "MAINWASH": "Lavado principal",
+          "COLDRINSE": "Aclarado frío",
+          "HOTRINSE": "Aclarado",
+          "EXTRARINSE": "Aclarado extra",
           "DRYING": "Secado",
-          "END": "Fin",
-          "NONE": "Ninguna",
-          "UNKNOWN": "Desconocido"
+          "ADO_DRYING": "Secado (puerta auto)",
+          "UNAVAILABLE": "—"
         }
       },
       "water_hardness": {
         "name": "Dureza del agua",
         "state": {
+          "SOFT": "Blanda",
+          "MEDIUM": "Media",
+          "HARD": "Dura",
+          "STEP_0": "Nivel 0",
           "STEP_1": "Nivel 1",
           "STEP_2": "Nivel 2",
           "STEP_3": "Nivel 3",
@@ -119,24 +125,21 @@
         "name": "Sonido de fin de ciclo",
         "state": {
           "NO_SOUND": "Sin sonido",
-          "SHORT_SOUND": "Sonido corto",
-          "LONG_SOUND": "Sonido largo"
+          "SHORT_SOUND": "Sonido corto"
         }
       },
       "display_on_floor": {
         "name": "Proyección en el suelo",
         "state": {
           "GREEN": "Verde",
-          "RED": "Rojo",
           "OFF": "Apagado"
         }
       },
       "handle_free_door_opening": {
         "name": "Apertura de puerta sin tirador",
         "state": {
-          "SINGLE_PUSH": "Una pulsación",
-          "DOUBLE_PUSH": "Doble pulsación",
-          "DISABLED": "Desactivado"
+          "OFF": "Apagado",
+          "SINGLE_PUSH": "Una pulsación"
         }
       },
       "network_interface_always_on": {
@@ -149,10 +152,10 @@
       "remote_control": {
         "name": "Control remoto",
         "state": {
-          "ENABLED": "Activado",
           "DISABLED": "Desactivado",
-          "NOT_SAFETY_RELEVANT_ENABLED": "Activado (no relevante para la seguridad)",
-          "SAFETY_RELEVANT_ENABLED": "Activado (relevante para la seguridad)"
+          "ENABLED": "Activado",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Parcial (solo comandos no críticos)",
+          "TEMPORARY_LOCKED": "Bloqueado temporalmente"
         }
       },
       "display_light": {
@@ -172,7 +175,7 @@
         }
       },
       "rinse_aid_level": {
-        "name": "Nivel de abrillantador"
+        "name": "Nivel de dosificación del abrillantador"
       },
       "start_time": {
         "name": "Hora de inicio"
@@ -205,12 +208,22 @@
       },
       "water_hardness_sensor_enable": {
         "name": "Sensor de dureza del agua"
+      },
+      "salt_missing": {
+        "name": "Falta sal"
+      },
+      "rinse_aid_low": {
+        "name": "Abrillantador bajo"
       }
     },
     "select": {
       "water_hardness": {
         "name": "Dureza del agua",
         "state": {
+          "SOFT": "Blanda",
+          "MEDIUM": "Media",
+          "HARD": "Dura",
+          "STEP_0": "Nivel 0",
           "STEP_1": "Nivel 1",
           "STEP_2": "Nivel 2",
           "STEP_3": "Nivel 3",
@@ -227,24 +240,21 @@
         "name": "Sonido de fin de ciclo",
         "state": {
           "NO_SOUND": "Sin sonido",
-          "SHORT_SOUND": "Sonido corto",
-          "LONG_SOUND": "Sonido largo"
+          "SHORT_SOUND": "Sonido corto"
         }
       },
       "display_on_floor": {
         "name": "Proyección en el suelo",
         "state": {
           "GREEN": "Verde",
-          "RED": "Rojo",
           "OFF": "Apagado"
         }
       },
       "handle_free_door_opening": {
         "name": "Apertura de puerta sin tirador",
         "state": {
-          "SINGLE_PUSH": "Una pulsación",
-          "DOUBLE_PUSH": "Doble pulsación",
-          "DISABLED": "Desactivado"
+          "OFF": "Apagado",
+          "SINGLE_PUSH": "Una pulsación"
         }
       },
       "network_interface_always_on": {
@@ -266,7 +276,17 @@
         }
       },
       "program_u_i_d": {
-        "name": "Programa"
+        "name": "Programa",
+        "state": {
+          "ECO": "Eco",
+          "AUTO": "Auto",
+          "QUICK30": "Rápido 30",
+          "QUICK60": "Rápido 60",
+          "NORMAL90": "Normal 90°",
+          "120_MIN": "120 minutos",
+          "RINSE": "Aclarado",
+          "MACHINE_CARE": "Cuidado de la máquina"
+        }
       }
     },
     "switch": {

@@ -38,7 +38,7 @@ DASHBOARD_URL: Final = "https://developer.electrolux.one/dashboard"
 
 # Mitgelieferte Lovelace-Karte (wird beim Setup automatisch registriert).
 # CARD_VERSION dient dem Cache-Busting — bei Änderung an der Karte erhöhen.
-CARD_VERSION: Final = "0.1.0"
+CARD_VERSION: Final = "0.2.1"
 CARD_FILENAME: Final = "electrolux-ocp-card.js"
 CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
 
@@ -140,6 +140,9 @@ TRANSLATED_BINARY_KEYS: Final[set[str]] = {
     "key_tone",
     "pre_select_last",
     "water_hardness_sensor_enable",
+    # Fest angelegte Alarm-Sensoren aus reported['alerts'].
+    "salt_missing",
+    "rinse_aid_low",
 }
 
 TRANSLATED_SELECT_KEYS: Final[set[str]] = {
