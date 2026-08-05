@@ -22,9 +22,10 @@ from .const import (
     DOOR_OPEN_VALUES,
     KNOWN_BINARY_KEYS,
     PROBLEM_TRUE_VALUES,
+    TRANSLATED_BINARY_KEYS,
 )
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
-from .entity import ElectroluxEntity, get_reported, humanize
+from .entity import ElectroluxEntity, get_reported, humanize, slugify_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +63,8 @@ class ElectroluxConnectivitySensor(ElectroluxEntity, BinarySensorEntity):
     def __init__(self, coordinator, appliance_id: str) -> None:
         super().__init__(coordinator, appliance_id)
         self._attr_unique_id = f"{appliance_id}_connectivity"
-        self._attr_name = "Verbindung"
+        # Name kommt aus der Übersetzung (translation_key "connectivity"),
+        # damit er der HA-Sprache folgt. Kein _attr_name mehr (überschriebe sie).
 
     @property
     def available(self) -> bool:
@@ -96,7 +98,12 @@ class ElectroluxBinarySensor(ElectroluxEntity, BinarySensorEntity):
         super().__init__(coordinator, appliance_id)
         self._key = key
         self._attr_unique_id = f"{appliance_id}_{key}"
-        self._attr_name = humanize(key)
+        # i18n: bekannter Slug -> HA übersetzt den Namen; sonst humanize-Fallback.
+        slug = slugify_key(key)
+        if slug in TRANSLATED_BINARY_KEYS:
+            self._attr_translation_key = slug
+        else:
+            self._attr_name = humanize(key)
 
         meta = KNOWN_BINARY_KEYS.get(key)
         if meta is not None:

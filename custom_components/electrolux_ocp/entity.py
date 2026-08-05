@@ -63,6 +63,28 @@ def humanize(key: str) -> str:
     return spaced.strip().capitalize()
 
 
+def slugify_key(key: str) -> str:
+    """Leite aus einem Property-/Capability-Key einen stabilen HA-translation_key ab.
+
+    camelCase wird an Grossbuchstaben getrennt, alles kleingeschrieben und jede
+    Folge nicht-alphanumerischer Zeichen (inkl. ``/``) zu ``_`` zusammengefasst.
+    Ergebnis ist ein gültiger HA-Slug (``a-z0-9_``), der zu den Einträgen in
+    ``translations/*.json`` passt. Die ``unique_id`` bleibt hiervon unberührt —
+    sie leitet sich weiterhin aus dem ROH-Key ab (Automationen hängen daran).
+
+    Beispiele:
+        ``applianceState`` -> ``appliance_state``
+        ``userSelections/extraPowerOption`` -> ``user_selections_extra_power_option``
+        ``programUID`` -> ``program_u_i_d``
+    """
+    import re
+
+    spaced = re.sub(r"(?<!^)(?=[A-Z])", "_", key)
+    lowered = spaced.lower()
+    collapsed = re.sub(r"[^a-z0-9]+", "_", lowered)
+    return collapsed.strip("_")
+
+
 class ElectroluxEntity(CoordinatorEntity[ElectroluxDataUpdateCoordinator]):
     """Basisklasse für alle Electrolux-Entitäten."""
 

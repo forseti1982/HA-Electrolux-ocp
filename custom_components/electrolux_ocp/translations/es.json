@@ -1,0 +1,315 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar Electrolux / AEG",
+        "description": "Cómo obtener tus credenciales (una sola vez, ~3 minutos):\n\n1. Abre el portal de desarrolladores de Electrolux: {dashboard}\n2. Inicia sesión — con **la misma cuenta que la app de Electrolux/AEG** (donde están tus electrodomésticos).\n3. Copia tu **API Key** (en el panel, sección « API Keys »).\n4. Genera allí un par de tokens (« Generate token » / « Authorize ») y copia el **Access Token** y el **Refresh Token**.\n\n¿Tienes los tres valores? Pulsa « Siguiente » abajo.",
+        "menu_options": {
+          "credentials": "Siguiente — tengo API Key, Access y Refresh token"
+        }
+      },
+      "credentials": {
+        "title": "Introducir credenciales",
+        "description": "Pega los tres valores del portal. Se quedan solo en tu Home Assistant.",
+        "data": {
+          "api_key": "API Key",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "Desde el panel, sección « API Keys ».",
+          "access_token": "El token de corta duración del par que acabas de generar.",
+          "refresh_token": "El token largo del mismo par — a partir de ahora se renueva automáticamente."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Volver a autenticar Electrolux / AEG",
+        "description": "Tus tokens han caducado (poco frecuente). Consigue nuevos rápidamente:\n\n1. Abre {dashboard} e inicia sesión.\n2. Genera un **nuevo** par de tokens (Access + Refresh).\n3. Tu **API Key** puede reutilizarse sin cambios.\n\n¿Listo? Pulsa « Siguiente ».",
+        "menu_options": {
+          "reauth_credentials": "Siguiente — introducir los nuevos tokens"
+        }
+      },
+      "reauth_credentials": {
+        "title": "Volver a autenticar — introducir tokens",
+        "description": "Pega los valores recién generados. La API Key puede seguir siendo la misma.",
+        "data": {
+          "api_key": "API Key",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "La misma de antes (o una nueva desde « API Keys »).",
+          "access_token": "El token de corta duración del nuevo par.",
+          "refresh_token": "El token largo del nuevo par."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Error de autenticación. Comprueba la API Key, el Access y el Refresh token — mejor genera unos nuevos en el portal.",
+      "cannot_connect": "No se pudo conectar con la API de Electrolux. Inténtalo de nuevo más tarde.",
+      "unknown": "Error inesperado. Inténtalo de nuevo."
+    },
+    "abort": {
+      "already_configured": "Esta cuenta ya está configurada.",
+      "reauth_successful": "Reautenticación correcta — tus electrodomésticos están conectados de nuevo.",
+      "wrong_account": "Estos tokens pertenecen a una cuenta de Electrolux distinta de la que se está reautenticando. Usa tokens de la misma cuenta."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones",
+        "description": "La API de desarrollador de Electrolux tiene un límite de frecuencia. Intervalos inferiores a 120 segundos pueden provocar errores.",
+        "data": {
+          "scan_interval": "Intervalo de sondeo (segundos)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "appliance_state": {
+        "name": "Estado del aparato",
+        "state": {
+          "IDLE": "Inactivo",
+          "RUNNING": "En marcha",
+          "PAUSED": "En pausa",
+          "END_OF_CYCLE": "Ciclo terminado",
+          "DELAYED_START": "Inicio diferido",
+          "OFF": "Apagado",
+          "STANDBY": "Reposo"
+        }
+      },
+      "appliance_mode": {
+        "name": "Modo del aparato",
+        "state": {
+          "NORMAL": "Normal",
+          "DEMO": "Demostración",
+          "SERVICE": "Servicio"
+        }
+      },
+      "cycle_phase": {
+        "name": "Fase del ciclo",
+        "state": {
+          "PREWASH": "Prelavado",
+          "MAIN_WASH": "Lavado principal",
+          "RINSE": "Aclarado",
+          "DRYING": "Secado",
+          "END": "Fin",
+          "NONE": "Ninguna",
+          "UNKNOWN": "Desconocido"
+        }
+      },
+      "water_hardness": {
+        "name": "Dureza del agua",
+        "state": {
+          "STEP_1": "Nivel 1",
+          "STEP_2": "Nivel 2",
+          "STEP_3": "Nivel 3",
+          "STEP_4": "Nivel 4",
+          "STEP_5": "Nivel 5",
+          "STEP_6": "Nivel 6",
+          "STEP_7": "Nivel 7",
+          "STEP_8": "Nivel 8",
+          "STEP_9": "Nivel 9",
+          "STEP_10": "Nivel 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "Sonido de fin de ciclo",
+        "state": {
+          "NO_SOUND": "Sin sonido",
+          "SHORT_SOUND": "Sonido corto",
+          "LONG_SOUND": "Sonido largo"
+        }
+      },
+      "display_on_floor": {
+        "name": "Proyección en el suelo",
+        "state": {
+          "GREEN": "Verde",
+          "RED": "Rojo",
+          "OFF": "Apagado"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Apertura de puerta sin tirador",
+        "state": {
+          "SINGLE_PUSH": "Una pulsación",
+          "DOUBLE_PUSH": "Doble pulsación",
+          "DISABLED": "Desactivado"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Interfaz de red siempre activa",
+        "state": {
+          "ON": "Activado",
+          "OFF": "Desactivado"
+        }
+      },
+      "remote_control": {
+        "name": "Control remoto",
+        "state": {
+          "ENABLED": "Activado",
+          "DISABLED": "Desactivado",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Activado (no relevante para la seguridad)",
+          "SAFETY_RELEVANT_ENABLED": "Activado (relevante para la seguridad)"
+        }
+      },
+      "display_light": {
+        "name": "Brillo de la pantalla",
+        "state": {
+          "DISPLAY_LIGHT_0": "Nivel 0",
+          "DISPLAY_LIGHT_1": "Nivel 1",
+          "DISPLAY_LIGHT_2": "Nivel 2",
+          "DISPLAY_LIGHT_3": "Nivel 3"
+        }
+      },
+      "connectivity_state": {
+        "name": "Estado de conexión",
+        "state": {
+          "connected": "Conectado",
+          "disconnected": "Desconectado"
+        }
+      },
+      "rinse_aid_level": {
+        "name": "Nivel de abrillantador"
+      },
+      "start_time": {
+        "name": "Hora de inicio"
+      },
+      "time_to_end": {
+        "name": "Tiempo restante"
+      },
+      "total_cycle_counter": {
+        "name": "Ciclos totales"
+      },
+      "cpv": {
+        "name": "CPV"
+      }
+    },
+    "binary_sensor": {
+      "connectivity": {
+        "name": "Conexión"
+      },
+      "door_state": {
+        "name": "Estado de la puerta"
+      },
+      "extra_info_temperature_enable": {
+        "name": "Info de temperatura extra"
+      },
+      "key_tone": {
+        "name": "Sonido de teclas"
+      },
+      "pre_select_last": {
+        "name": "Última preselección"
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Sensor de dureza del agua"
+      }
+    },
+    "select": {
+      "water_hardness": {
+        "name": "Dureza del agua",
+        "state": {
+          "STEP_1": "Nivel 1",
+          "STEP_2": "Nivel 2",
+          "STEP_3": "Nivel 3",
+          "STEP_4": "Nivel 4",
+          "STEP_5": "Nivel 5",
+          "STEP_6": "Nivel 6",
+          "STEP_7": "Nivel 7",
+          "STEP_8": "Nivel 8",
+          "STEP_9": "Nivel 9",
+          "STEP_10": "Nivel 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "Sonido de fin de ciclo",
+        "state": {
+          "NO_SOUND": "Sin sonido",
+          "SHORT_SOUND": "Sonido corto",
+          "LONG_SOUND": "Sonido largo"
+        }
+      },
+      "display_on_floor": {
+        "name": "Proyección en el suelo",
+        "state": {
+          "GREEN": "Verde",
+          "RED": "Rojo",
+          "OFF": "Apagado"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Apertura de puerta sin tirador",
+        "state": {
+          "SINGLE_PUSH": "Una pulsación",
+          "DOUBLE_PUSH": "Doble pulsación",
+          "DISABLED": "Desactivado"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Interfaz de red siempre activa",
+        "state": {
+          "ON": "Activado",
+          "OFF": "Desactivado"
+        }
+      },
+      "execute_command": {
+        "name": "Ejecutar comando",
+        "state": {
+          "ON": "Encender",
+          "OFF": "Apagar",
+          "PAUSE": "Pausa",
+          "RESUME": "Reanudar",
+          "START": "Iniciar",
+          "STOP": "Detener"
+        }
+      },
+      "program_u_i_d": {
+        "name": "Programa"
+      }
+    },
+    "switch": {
+      "key_tone": {
+        "name": "Sonido de teclas"
+      },
+      "network_interface_always_on": {
+        "name": "Interfaz de red siempre activa",
+        "state": {
+          "ON": "Activado",
+          "OFF": "Desactivado"
+        }
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Sensor de dureza del agua"
+      },
+      "user_selections_auto_door_opener": {
+        "name": "Abrepuertas automático"
+      },
+      "user_selections_extra_power_option": {
+        "name": "Potencia extra"
+      },
+      "user_selections_extra_silent_option": {
+        "name": "Extra silencioso"
+      },
+      "user_selections_glass_care_option": {
+        "name": "Cuidado del cristal"
+      },
+      "user_selections_one_rack_option": {
+        "name": "Una bandeja"
+      },
+      "user_selections_sanitize_option": {
+        "name": "Higienización"
+      },
+      "user_selections_spray_zone_option": {
+        "name": "Zona de pulverización"
+      },
+      "user_selections_xtra_dry_option": {
+        "name": "Secado extra"
+      },
+      "user_selections_zone_clean_option": {
+        "name": "Limpieza por zonas"
+      }
+    }
+  }
+}

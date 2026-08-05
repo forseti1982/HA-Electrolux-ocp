@@ -16,9 +16,14 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import KNOWN_BINARY_KEYS, KNOWN_SENSOR_KEYS, TOTAL_INCREASING_KEYS
+from .const import (
+    KNOWN_BINARY_KEYS,
+    KNOWN_SENSOR_KEYS,
+    TOTAL_INCREASING_KEYS,
+    TRANSLATED_SENSOR_KEYS,
+)
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
-from .entity import ElectroluxEntity, get_reported, humanize
+from .entity import ElectroluxEntity, get_reported, humanize, slugify_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +65,14 @@ class ElectroluxSensor(ElectroluxEntity, SensorEntity):
         super().__init__(coordinator, appliance_id)
         self._key = key
         self._attr_unique_id = f"{appliance_id}_{key}"
-        self._attr_name = humanize(key)
+        # i18n: Bei bekanntem Slug übersetzt HA Name + Enum-States selbst.
+        # unique_id bleibt am ROH-Key hängen (Automationen). Kein _attr_name
+        # setzen, sonst gewinnt dieser über die Übersetzung.
+        slug = slugify_key(key)
+        if slug in TRANSLATED_SENSOR_KEYS:
+            self._attr_translation_key = slug
+        else:
+            self._attr_name = humanize(key)
 
         meta = KNOWN_SENSOR_KEYS.get(key)
         if meta is not None:

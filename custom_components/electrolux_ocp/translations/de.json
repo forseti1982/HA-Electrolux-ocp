@@ -67,9 +67,248 @@
     }
   },
   "entity": {
+    "sensor": {
+      "appliance_state": {
+        "name": "Geräte-Status",
+        "state": {
+          "IDLE": "Bereit",
+          "RUNNING": "Läuft",
+          "PAUSED": "Pausiert",
+          "END_OF_CYCLE": "Zyklus beendet",
+          "DELAYED_START": "Startverzögerung",
+          "OFF": "Aus",
+          "STANDBY": "Standby"
+        }
+      },
+      "appliance_mode": {
+        "name": "Geräte-Modus",
+        "state": {
+          "NORMAL": "Normal",
+          "DEMO": "Demo",
+          "SERVICE": "Service"
+        }
+      },
+      "cycle_phase": {
+        "name": "Zyklus-Phase",
+        "state": {
+          "PREWASH": "Vorspülen",
+          "MAIN_WASH": "Hauptspülgang",
+          "RINSE": "Klarspülen",
+          "DRYING": "Trocknen",
+          "END": "Ende",
+          "NONE": "Keine",
+          "UNKNOWN": "Unbekannt"
+        }
+      },
+      "water_hardness": {
+        "name": "Wasserhärte",
+        "state": {
+          "STEP_1": "Stufe 1",
+          "STEP_2": "Stufe 2",
+          "STEP_3": "Stufe 3",
+          "STEP_4": "Stufe 4",
+          "STEP_5": "Stufe 5",
+          "STEP_6": "Stufe 6",
+          "STEP_7": "Stufe 7",
+          "STEP_8": "Stufe 8",
+          "STEP_9": "Stufe 9",
+          "STEP_10": "Stufe 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "Signalton am Ende",
+        "state": {
+          "NO_SOUND": "Kein Ton",
+          "SHORT_SOUND": "Kurzer Ton",
+          "LONG_SOUND": "Langer Ton"
+        }
+      },
+      "display_on_floor": {
+        "name": "Boden-Projektion",
+        "state": {
+          "GREEN": "Grün",
+          "RED": "Rot",
+          "OFF": "Aus"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Griffloses Türöffnen",
+        "state": {
+          "SINGLE_PUSH": "Einmal drücken",
+          "DOUBLE_PUSH": "Zweimal drücken",
+          "DISABLED": "Deaktiviert"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Netzwerk dauerhaft an",
+        "state": {
+          "ON": "An",
+          "OFF": "Aus"
+        }
+      },
+      "remote_control": {
+        "name": "Fernsteuerung",
+        "state": {
+          "ENABLED": "Aktiviert",
+          "DISABLED": "Deaktiviert",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Aktiviert (nicht sicherheitsrelevant)",
+          "SAFETY_RELEVANT_ENABLED": "Aktiviert (sicherheitsrelevant)"
+        }
+      },
+      "display_light": {
+        "name": "Display-Helligkeit",
+        "state": {
+          "DISPLAY_LIGHT_0": "Stufe 0",
+          "DISPLAY_LIGHT_1": "Stufe 1",
+          "DISPLAY_LIGHT_2": "Stufe 2",
+          "DISPLAY_LIGHT_3": "Stufe 3"
+        }
+      },
+      "connectivity_state": {
+        "name": "Verbindungsstatus",
+        "state": {
+          "connected": "Verbunden",
+          "disconnected": "Getrennt"
+        }
+      },
+      "rinse_aid_level": {
+        "name": "Klarspüler-Füllstand"
+      },
+      "start_time": {
+        "name": "Startzeit"
+      },
+      "time_to_end": {
+        "name": "Restzeit"
+      },
+      "total_cycle_counter": {
+        "name": "Spülgänge gesamt"
+      },
+      "cpv": {
+        "name": "CPV"
+      }
+    },
     "binary_sensor": {
       "connectivity": {
         "name": "Verbindung"
+      },
+      "door_state": {
+        "name": "Türzustand"
+      },
+      "extra_info_temperature_enable": {
+        "name": "Zusatzinfo Temperatur"
+      },
+      "key_tone": {
+        "name": "Tastenton"
+      },
+      "pre_select_last": {
+        "name": "Letzte Vorwahl"
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Wasserhärte-Sensor"
+      }
+    },
+    "select": {
+      "water_hardness": {
+        "name": "Wasserhärte",
+        "state": {
+          "STEP_1": "Stufe 1",
+          "STEP_2": "Stufe 2",
+          "STEP_3": "Stufe 3",
+          "STEP_4": "Stufe 4",
+          "STEP_5": "Stufe 5",
+          "STEP_6": "Stufe 6",
+          "STEP_7": "Stufe 7",
+          "STEP_8": "Stufe 8",
+          "STEP_9": "Stufe 9",
+          "STEP_10": "Stufe 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "Signalton am Ende",
+        "state": {
+          "NO_SOUND": "Kein Ton",
+          "SHORT_SOUND": "Kurzer Ton",
+          "LONG_SOUND": "Langer Ton"
+        }
+      },
+      "display_on_floor": {
+        "name": "Boden-Projektion",
+        "state": {
+          "GREEN": "Grün",
+          "RED": "Rot",
+          "OFF": "Aus"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Griffloses Türöffnen",
+        "state": {
+          "SINGLE_PUSH": "Einmal drücken",
+          "DOUBLE_PUSH": "Zweimal drücken",
+          "DISABLED": "Deaktiviert"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Netzwerk dauerhaft an",
+        "state": {
+          "ON": "An",
+          "OFF": "Aus"
+        }
+      },
+      "execute_command": {
+        "name": "Kommando ausführen",
+        "state": {
+          "ON": "Ein",
+          "OFF": "Aus",
+          "PAUSE": "Pause",
+          "RESUME": "Fortsetzen",
+          "START": "Start",
+          "STOP": "Stopp"
+        }
+      },
+      "program_u_i_d": {
+        "name": "Programm"
+      }
+    },
+    "switch": {
+      "key_tone": {
+        "name": "Tastenton"
+      },
+      "network_interface_always_on": {
+        "name": "Netzwerk dauerhaft an",
+        "state": {
+          "ON": "An",
+          "OFF": "Aus"
+        }
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Wasserhärte-Sensor"
+      },
+      "user_selections_auto_door_opener": {
+        "name": "Auto-Türöffner"
+      },
+      "user_selections_extra_power_option": {
+        "name": "Extra-Power"
+      },
+      "user_selections_extra_silent_option": {
+        "name": "Extra leise"
+      },
+      "user_selections_glass_care_option": {
+        "name": "Glas-Schonung"
+      },
+      "user_selections_one_rack_option": {
+        "name": "1 Korb"
+      },
+      "user_selections_sanitize_option": {
+        "name": "Hygiene"
+      },
+      "user_selections_spray_zone_option": {
+        "name": "Sprühzone"
+      },
+      "user_selections_xtra_dry_option": {
+        "name": "Extra-Trocknen"
+      },
+      "user_selections_zone_clean_option": {
+        "name": "Zonen-Reinigung"
       }
     }
   }

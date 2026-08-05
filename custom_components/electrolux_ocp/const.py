@@ -98,3 +98,71 @@ KNOWN_BINARY_KEYS: Final[dict[str, tuple[str | None, str | None, bool]]] = {
 DOOR_OPEN_VALUES: Final = {"OPEN", "OPENED", "DOOR_OPEN", True, "ON"}
 # Werte, die "Warnung/nachfüllen" bedeuten (# VERIFY)
 PROBLEM_TRUE_VALUES: Final = {"LOW", "EMPTY", "NEEDS_REFILL", "TRUE", True, "ON"}
+
+# ---------------------------------------------------------------------------
+# Mehrsprachigkeit (i18n): translation_keys, für die Name- UND State-Über-
+# setzungen in translations/*.json hinterlegt sind.
+#
+# Die Slugs entstehen aus slugify_key(roh_key). Ist der Slug einer Entität hier
+# enthalten, wird _attr_translation_key gesetzt (HA übersetzt Name + Enum-States
+# in die Benutzersprache). Sonst greift der humanize()-Fallback (kein
+# _attr_translation_key), damit unbekannte Properties trotzdem einen lesbaren
+# Namen behalten. unique_ids bleiben in JEDEM Fall unverändert.
+#
+# # VERIFY: Die exakten Enum-Werte/Keys sind geräte-/firmwareabhängig und ohne
+# echte Tokens nicht live verifiziert. Fehlt eine Übersetzung, zeigt HA den
+# rohen Enum-Wert — also nie schlechter als bisher, nur unübersetzt.
+# ---------------------------------------------------------------------------
+
+TRANSLATED_SENSOR_KEYS: Final[set[str]] = {
+    "appliance_state",
+    "appliance_mode",
+    "cycle_phase",
+    "water_hardness",
+    "end_of_cycle_sound",
+    "display_on_floor",
+    "handle_free_door_opening",
+    "network_interface_always_on",
+    "remote_control",
+    "display_light",
+    "connectivity_state",
+    "rinse_aid_level",
+    "start_time",
+    "time_to_end",
+    "total_cycle_counter",
+    "cpv",
+}
+
+TRANSLATED_BINARY_KEYS: Final[set[str]] = {
+    "connectivity",
+    "door_state",
+    "extra_info_temperature_enable",
+    "key_tone",
+    "pre_select_last",
+    "water_hardness_sensor_enable",
+}
+
+TRANSLATED_SELECT_KEYS: Final[set[str]] = {
+    "water_hardness",
+    "end_of_cycle_sound",
+    "display_on_floor",
+    "handle_free_door_opening",
+    "network_interface_always_on",
+    "execute_command",
+    "program_u_i_d",
+}
+
+TRANSLATED_SWITCH_KEYS: Final[set[str]] = {
+    "key_tone",
+    "network_interface_always_on",
+    "water_hardness_sensor_enable",
+    "user_selections_auto_door_opener",
+    "user_selections_extra_power_option",
+    "user_selections_extra_silent_option",
+    "user_selections_glass_care_option",
+    "user_selections_one_rack_option",
+    "user_selections_sanitize_option",
+    "user_selections_spray_zone_option",
+    "user_selections_xtra_dry_option",
+    "user_selections_zone_clean_option",
+}

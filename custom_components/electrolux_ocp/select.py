@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import TRANSLATED_SELECT_KEYS
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import (
     ElectroluxEntity,
@@ -26,6 +27,7 @@ from .entity import (
     get_reported,
     humanize,
     is_writable,
+    slugify_key,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +79,13 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
         super().__init__(coordinator, appliance_id)
         self._key = key
         self._attr_unique_id = f"{appliance_id}_{key}_select"
-        self._attr_name = humanize(key)
+        # i18n: bekannter Slug -> HA übersetzt Name UND Optionen (state.<ENUM>);
+        # sonst humanize-Fallback (Optionen bleiben roh).
+        slug = slugify_key(key)
+        if slug in TRANSLATED_SELECT_KEYS:
+            self._attr_translation_key = slug
+        else:
+            self._attr_name = humanize(key)
         self._attr_options = options
 
     @property

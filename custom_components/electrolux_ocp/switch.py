@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import TRANSLATED_SWITCH_KEYS
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import (
     ElectroluxEntity,
@@ -23,6 +24,7 @@ from .entity import (
     get_reported,
     humanize,
     is_writable,
+    slugify_key,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +75,12 @@ class ElectroluxSwitch(ElectroluxEntity, SwitchEntity):
         super().__init__(coordinator, appliance_id)
         self._key = key
         self._attr_unique_id = f"{appliance_id}_{key}_switch"
-        self._attr_name = humanize(key)
+        # i18n: bekannter Slug -> HA übersetzt den Namen; sonst humanize-Fallback.
+        slug = slugify_key(key)
+        if slug in TRANSLATED_SWITCH_KEYS:
+            self._attr_translation_key = slug
+        else:
+            self._attr_name = humanize(key)
 
     @property
     def is_on(self) -> bool | None:

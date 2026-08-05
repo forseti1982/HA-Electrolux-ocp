@@ -67,9 +67,248 @@
     }
   },
   "entity": {
+    "sensor": {
+      "appliance_state": {
+        "name": "Appliance state",
+        "state": {
+          "IDLE": "Idle",
+          "RUNNING": "Running",
+          "PAUSED": "Paused",
+          "END_OF_CYCLE": "Cycle finished",
+          "DELAYED_START": "Delayed start",
+          "OFF": "Off",
+          "STANDBY": "Standby"
+        }
+      },
+      "appliance_mode": {
+        "name": "Appliance mode",
+        "state": {
+          "NORMAL": "Normal",
+          "DEMO": "Demo",
+          "SERVICE": "Service"
+        }
+      },
+      "cycle_phase": {
+        "name": "Cycle phase",
+        "state": {
+          "PREWASH": "Prewash",
+          "MAIN_WASH": "Main wash",
+          "RINSE": "Rinse",
+          "DRYING": "Drying",
+          "END": "End",
+          "NONE": "None",
+          "UNKNOWN": "Unknown"
+        }
+      },
+      "water_hardness": {
+        "name": "Water hardness",
+        "state": {
+          "STEP_1": "Level 1",
+          "STEP_2": "Level 2",
+          "STEP_3": "Level 3",
+          "STEP_4": "Level 4",
+          "STEP_5": "Level 5",
+          "STEP_6": "Level 6",
+          "STEP_7": "Level 7",
+          "STEP_8": "Level 8",
+          "STEP_9": "Level 9",
+          "STEP_10": "Level 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "End-of-cycle sound",
+        "state": {
+          "NO_SOUND": "No sound",
+          "SHORT_SOUND": "Short sound",
+          "LONG_SOUND": "Long sound"
+        }
+      },
+      "display_on_floor": {
+        "name": "Floor beam",
+        "state": {
+          "GREEN": "Green",
+          "RED": "Red",
+          "OFF": "Off"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Handle-free door opening",
+        "state": {
+          "SINGLE_PUSH": "Single push",
+          "DOUBLE_PUSH": "Double push",
+          "DISABLED": "Disabled"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Network interface always on",
+        "state": {
+          "ON": "On",
+          "OFF": "Off"
+        }
+      },
+      "remote_control": {
+        "name": "Remote control",
+        "state": {
+          "ENABLED": "Enabled",
+          "DISABLED": "Disabled",
+          "NOT_SAFETY_RELEVANT_ENABLED": "Enabled (not safety-relevant)",
+          "SAFETY_RELEVANT_ENABLED": "Enabled (safety-relevant)"
+        }
+      },
+      "display_light": {
+        "name": "Display brightness",
+        "state": {
+          "DISPLAY_LIGHT_0": "Level 0",
+          "DISPLAY_LIGHT_1": "Level 1",
+          "DISPLAY_LIGHT_2": "Level 2",
+          "DISPLAY_LIGHT_3": "Level 3"
+        }
+      },
+      "connectivity_state": {
+        "name": "Connectivity state",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
+      },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "start_time": {
+        "name": "Start time"
+      },
+      "time_to_end": {
+        "name": "Time remaining"
+      },
+      "total_cycle_counter": {
+        "name": "Total cycle count"
+      },
+      "cpv": {
+        "name": "CPV"
+      }
+    },
     "binary_sensor": {
       "connectivity": {
         "name": "Connection"
+      },
+      "door_state": {
+        "name": "Door state"
+      },
+      "extra_info_temperature_enable": {
+        "name": "Extra temperature info"
+      },
+      "key_tone": {
+        "name": "Key tone"
+      },
+      "pre_select_last": {
+        "name": "Last preselection"
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Water hardness sensor"
+      }
+    },
+    "select": {
+      "water_hardness": {
+        "name": "Water hardness",
+        "state": {
+          "STEP_1": "Level 1",
+          "STEP_2": "Level 2",
+          "STEP_3": "Level 3",
+          "STEP_4": "Level 4",
+          "STEP_5": "Level 5",
+          "STEP_6": "Level 6",
+          "STEP_7": "Level 7",
+          "STEP_8": "Level 8",
+          "STEP_9": "Level 9",
+          "STEP_10": "Level 10"
+        }
+      },
+      "end_of_cycle_sound": {
+        "name": "End-of-cycle sound",
+        "state": {
+          "NO_SOUND": "No sound",
+          "SHORT_SOUND": "Short sound",
+          "LONG_SOUND": "Long sound"
+        }
+      },
+      "display_on_floor": {
+        "name": "Floor beam",
+        "state": {
+          "GREEN": "Green",
+          "RED": "Red",
+          "OFF": "Off"
+        }
+      },
+      "handle_free_door_opening": {
+        "name": "Handle-free door opening",
+        "state": {
+          "SINGLE_PUSH": "Single push",
+          "DOUBLE_PUSH": "Double push",
+          "DISABLED": "Disabled"
+        }
+      },
+      "network_interface_always_on": {
+        "name": "Network interface always on",
+        "state": {
+          "ON": "On",
+          "OFF": "Off"
+        }
+      },
+      "execute_command": {
+        "name": "Execute command",
+        "state": {
+          "ON": "On",
+          "OFF": "Off",
+          "PAUSE": "Pause",
+          "RESUME": "Resume",
+          "START": "Start",
+          "STOP": "Stop"
+        }
+      },
+      "program_u_i_d": {
+        "name": "Program"
+      }
+    },
+    "switch": {
+      "key_tone": {
+        "name": "Key tone"
+      },
+      "network_interface_always_on": {
+        "name": "Network interface always on",
+        "state": {
+          "ON": "On",
+          "OFF": "Off"
+        }
+      },
+      "water_hardness_sensor_enable": {
+        "name": "Water hardness sensor"
+      },
+      "user_selections_auto_door_opener": {
+        "name": "Auto door opener"
+      },
+      "user_selections_extra_power_option": {
+        "name": "Extra power"
+      },
+      "user_selections_extra_silent_option": {
+        "name": "Extra silent"
+      },
+      "user_selections_glass_care_option": {
+        "name": "Glass care"
+      },
+      "user_selections_one_rack_option": {
+        "name": "One rack"
+      },
+      "user_selections_sanitize_option": {
+        "name": "Sanitize"
+      },
+      "user_selections_spray_zone_option": {
+        "name": "Spray zone"
+      },
+      "user_selections_xtra_dry_option": {
+        "name": "Extra dry"
+      },
+      "user_selections_zone_clean_option": {
+        "name": "Zone clean"
       }
     }
   }
