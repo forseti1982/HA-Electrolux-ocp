@@ -38,9 +38,16 @@ DASHBOARD_URL: Final = "https://developer.electrolux.one/dashboard"
 
 # Mitgelieferte Lovelace-Karte (wird beim Setup automatisch registriert).
 # CARD_VERSION dient dem Cache-Busting — bei Änderung an der Karte erhöhen.
-CARD_VERSION: Final = "0.2.2"
+CARD_VERSION: Final = "0.2.3"
 CARD_FILENAME: Final = "electrolux-ocp-card.js"
 CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
+
+# Mitgeliefertes Zusatz-Modul: die zwei gefuehrten Flows (Beladen-Hilfe +
+# Programmassistent) als eigenstaendiges Custom-Element `electrolux-guides`.
+# Wird ueber denselben Mechanismus wie die Karte registriert (Static-Path +
+# add_extra_js_url), damit `<electrolux-guides>` in der Karte definiert ist.
+GUIDES_FILENAME: Final = "electrolux-ocp-guides.js"
+GUIDES_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-guides.js"
 
 # ---------------------------------------------------------------------------
 # Kuratierte Metadaten für bekannte Geräte-Eigenschaften ("reported"-Keys).

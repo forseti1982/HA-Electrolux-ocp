@@ -13,7 +13,14 @@ from pathlib import Path
 
 from homeassistant.core import HomeAssistant
 
-from .const import CARD_FILENAME, CARD_URL_PATH, CARD_VERSION, DOMAIN
+from .const import (
+    CARD_FILENAME,
+    CARD_URL_PATH,
+    CARD_VERSION,
+    DOMAIN,
+    GUIDES_FILENAME,
+    GUIDES_URL_PATH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +42,23 @@ async def async_register_card(hass: HomeAssistant) -> None:
 
     # Import bewusst lokal, um die http-Komponente nur bei Bedarf zu laden.
     from homeassistant.components.http import StaticPathConfig
+    from homeassistant.components.frontend import add_extra_js_url
+
+    # Zusatz-Modul (gefuehrte Flows) mit DEMSELBEN Mechanismus registrieren.
+    # Bewusst ZUERST eingehängt, damit `<electrolux-guides>` bereits definiert ist,
+    # bevor die Karte lädt (Custom-Elements upgraden zwar auch nachträglich, aber
+    # so ist die Reihenfolge deterministisch). Fehlt die Datei, läuft die Karte
+    # ohne die Chips weiter (rollback-sicher, kein harter Bruch).
+    guides_path = Path(__file__).parent / "frontend" / GUIDES_FILENAME
+    if await hass.async_add_executor_job(guides_path.is_file):
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(GUIDES_URL_PATH, str(guides_path), True)]
+        )
+        add_extra_js_url(hass, f"{GUIDES_URL_PATH}?v={CARD_VERSION}")
+    else:
+        _LOGGER.warning(
+            "Guides-Modul nicht gefunden, Chips deaktiviert: %s", guides_path
+        )
 
     await hass.http.async_register_static_paths(
         [StaticPathConfig(CARD_URL_PATH, str(card_path), True)]
@@ -42,8 +66,6 @@ async def async_register_card(hass: HomeAssistant) -> None:
 
     # add_extra_js_url hängt das Modul als Frontend-Ressource ein. Cache-Busting
     # über den Versions-Query, damit Browser eine neue Kartenversion laden.
-    from homeassistant.components.frontend import add_extra_js_url
-
     add_extra_js_url(hass, f"{CARD_URL_PATH}?v={CARD_VERSION}")
 
     hass.data[_REGISTERED_KEY] = True

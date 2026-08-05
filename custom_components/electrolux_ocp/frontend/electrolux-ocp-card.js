@@ -132,6 +132,11 @@ const LOCALMAP = {
   ADO_DRYING: D('Trocknen (T@252;r-Auto)'), UNAVAILABLE: ''
 };
 
+// Chip-Icons fuer die gefuehrten Flows (Beladen-Hilfe / Programmassistent).
+// Reine ASCII-Line-Art; leben in der Karte, weil die Chips in der Titelzeile sitzen.
+const IC_LOAD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15h16"/><path d="M6 15c0 3 2 4 6 4s6-1 6-4"/><ellipse cx="12" cy="8" rx="5" ry="3.4"/></svg>';
+const IC_WAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L15 9"/><path d="M17 4L18 7L21 8L18 9L17 12L16 9L13 8L16 7Z"/></svg>';
+
 if (!customElements.get('electrolux-ocp-card')) {
   class SpuelerCard extends HTMLElement {
     constructor() {
@@ -466,6 +471,35 @@ if (!customElements.get('electrolux-ocp-card')) {
       if (!r || r.enabled === false) return;
       if (r.entity) this._call(r.entity, 'toggle');
     }
+    // Wendet eine Wizard-Empfehlung an: EIN Programm + GENAU EINE Option setzen.
+    // Nutzt die vorhandene _call-Wahrheit (kein neuer Service-Pfad). Nicht-gewaehlte
+    // Optionen werden NIE angefasst (kein Massen-Reset). d.prog ist ein OCP-Key,
+    // d.opt ein Options-Kurzschluessel ohne _option-Suffix (oder null).
+    _applyGuide(d) {
+      if (this._demo || !d || !d.prog || !this._hass) return;
+      // Programm: bevorzugt der konfigurierte program_select, sonst die bestaetigte Live-Entity.
+      const selId = this._ent.program_select || 'select.geschirrspulmaschine_user_selections_program_u_i_d';
+      const so = this._hass.states && this._hass.states[selId];
+      const list = (so && so.attributes && Array.isArray(so.attributes.options)) ? so.attributes.options : [];
+      const want = String(d.prog).toUpperCase().trim();
+      let option = null;
+      for (let i = 0; i < list.length; i++) { if (String(list[i]).toUpperCase().trim() === want) { option = list[i]; break; } }
+      if (option == null) option = d.prog; // Fallback: rohen OCP-Key senden (Select nimmt den programUID).
+      this._call(selId, 'select_option', { option });
+      // Option: GENAU EINE einschalten (turn_on = idempotent, kein Toggle-Flackern).
+      if (d.opt) {
+        const key = String(d.opt).toLowerCase() + '_option';
+        let swId = null;
+        if (Array.isArray(this._ent.option_switches)) {
+          for (let i = 0; i < this._ent.option_switches.length; i++) {
+            const x = this._ent.option_switches[i];
+            if (x && x.entity && optKeyFromEntity(x.entity) === key) { swId = x.entity; break; }
+          }
+        }
+        if (!swId) swId = 'switch.geschirrspulmaschine_user_selections_' + String(d.opt).toLowerCase() + '_option';
+        this._call(swId, 'turn_on');
+      }
+    }
     _tap(e) {
       let n = e.target, act = null;
       while (n && n !== this.shadowRoot) { if (n.dataset && n.dataset.act) { act = n.dataset.act; break; } n = n.parentNode; }
@@ -474,6 +508,9 @@ if (!customElements.get('electrolux-ocp-card')) {
       if (['door', 'prog', 'time', 'salt', 'rinse'].indexOf(act) > -1) { this._open = this._open === act ? null : act; return this._rerender(); }
       // "i"-Info je Option: IMMER erlaubt (auch bei disabled/Remote aus) -> reine Anzeige.
       if (act[0] === 'f') { const i = +act.slice(1); this._optInfo = this._optInfo === i ? null : i; return this._rerender(); }
+      // Gefuehrte Flows: immer erlaubt (reine Anzeige/Assistent), unabhaengig von Remote.
+      if (act === 'gload') { if (this._guides && this._guides.openLoad) this._guides.openLoad(); return; }
+      if (act === 'gwiz') { if (this._guides && this._guides.openWiz) this._guides.openWiz(); return; }
       if (!this._model().remote) return;
       if (act === 'cn') { this._confirm = null; return this._rerender(); }
       if (act === 'cy') { const k = this._confirm; this._confirm = null; this._runAct(k); return this._rerender(); }
@@ -663,6 +700,10 @@ if (!customElements.get('electrolux-ocp-card')) {
         '<style>' + this._css() + '</style>' +
         '<div class="card">' +
         '<div class="hd"><span class="ttl">' + T.title + '</span>' +
+        '<span class="ghintact">' +
+        '<button class="gchip" data-act="gload" type="button" aria-haspopup="dialog">' + IC_LOAD + '<span>' + D('Beladen @8211; so geht\'s') + '</span></button>' +
+        '<button class="gchip alt" data-act="gwiz" type="button" aria-haspopup="dialog">' + IC_WAND + '<span>Programm finden</span></button>' +
+        '</span>' +
         '<span class="pill">' + (m.demo ? '<span class="demo">' + T.demo + '</span>' : '') +
         '<span class="dot ' + dotCls + '"></span>' + esc(pill) + '</span></div>' +
         '<div class="wrap">' +
@@ -680,6 +721,17 @@ if (!customElements.get('electrolux-ocp-card')) {
         this._detail(m) +
         this._ctrlBlock(m) +
         '</div>';
+
+      // Gefuehrte Flows als eigenstaendiges, persistentes Element mounten. Da
+      // _render den Shadow-Root via innerHTML neu schreibt, wird das (per Referenz
+      // gehaltene) Element danach RE-angehaengt -> seine Instanz + sein interner
+      // Overlay-/Wizard-Zustand ueberleben jedes Re-Render. Die Definition liefert
+      // die separat registrierte electrolux-ocp-guides.js.
+      if (!this._guides) {
+        this._guides = document.createElement('electrolux-guides');
+        this._guides.addEventListener('program-apply', e => this._applyGuide(e.detail));
+      }
+      sr.appendChild(this._guides);
     }
 
     _css() {
@@ -744,6 +796,15 @@ if (!customElements.get('electrolux-ocp-card')) {
         ".abtn.crit,.cbtn.yes{color:#ff1e6f;border-color:rgba(255,30,111,.5)}.abtn.dis{opacity:.3;cursor:not-allowed;pointer-events:none}" +
         ".ctrlbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ask{font-size:13px;color:#ff9d2f;flex:1;min-width:130px}.cbtn.no{opacity:.8}" +
         "[data-act]:focus-visible{outline:2px solid #ff1e6f;outline-offset:2px;border-radius:6px}" +
+        // Gefuehrte-Flow-Chips in der Titelzeile: eine Zeile auf breit, bewusster
+        // Umbruch auf schmal; 44px Hit-Area via ::before (Optik bleibt 36).
+        ".hd{flex-wrap:wrap;gap:10px}.ttl{margin-right:auto}" +
+        ".ghintact{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center}" +
+        ".gchip{position:relative;display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);color:#f4f4f6;font:inherit;font-size:12px;letter-spacing:.2px;cursor:pointer;white-space:nowrap}" +
+        ".gchip::before{content:'';position:absolute;inset:-4px 0}" +
+        ".gchip:hover{background:rgba(255,255,255,.09)}" +
+        ".gchip svg{width:16px;height:16px;fill:none;stroke:#ff1e6f;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}" +
+        ".gchip.alt svg{stroke:#4aa8ff}" +
         "@media(prefers-reduced-motion:reduce){.door.pop{animation:none}.bar>i,.sw,.sw>i{transition:none}}"
       );
     }
