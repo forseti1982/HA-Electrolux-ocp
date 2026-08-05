@@ -12,6 +12,15 @@ CONF_API_KEY: Final = "api_key"
 CONF_ACCESS_TOKEN: Final = "access_token"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
+# Monotoner Zeitstempel jedes Token-Schreibvorgangs (Rotation ODER Re-Auth).
+# Dient dem "frischester gewinnt"-Abgleich zwischen Config-Entry (debounced)
+# und dem redundanten Sofort-Store beim Setup — schliesst den Neustart-Race.
+CONF_TOKEN_TS: Final = "token_ts"
+
+# Redundanter, SOFORT persistierter Token-Store (übersteht den Neustart-Race,
+# weil async_update_entry nur verzögert auf die Platte schreibt).
+TOKEN_STORE_VERSION: Final = 1
+TOKEN_STORE_KEY: Final = "electrolux_ocp_tokens"
 
 # Poll-Intervall.
 # Hinweis: Die Electrolux Developer-API ist rate-limitiert. Referenz-Clients

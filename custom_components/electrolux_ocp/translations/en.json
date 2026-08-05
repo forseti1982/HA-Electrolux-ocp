@@ -2,33 +2,57 @@
   "config": {
     "step": {
       "user": {
-        "title": "Electrolux / AEG (OCP Developer API)",
-        "description": "Create an API key and generate an Access Token and Refresh Token at {dashboard}, then paste all three values here. Keep these credentials secret.",
+        "title": "Connect Electrolux / AEG",
+        "description": "How to get your credentials (one-time, ~3 minutes):\n\n1. Open the Electrolux developer portal: {dashboard}\n2. Sign in — with the **same account as the Electrolux/AEG app** (where your appliances are).\n3. Copy your **API Key** (in the dashboard under \"API Keys\").\n4. Generate a token pair there (\"Generate token\" / \"Authorize\") and copy the **Access Token** and **Refresh Token**.\n\nHave all three values? Then tap \"Next\" below.",
+        "menu_options": {
+          "credentials": "Next — I have API Key, Access & Refresh token"
+        }
+      },
+      "credentials": {
+        "title": "Enter credentials",
+        "description": "Paste the three values from the portal. They stay only in your Home Assistant.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
           "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "From the dashboard, \"API Keys\" section.",
+          "access_token": "The short-lived token from the pair you just generated.",
+          "refresh_token": "The long token from the same pair — it renews itself automatically from now on."
         }
       },
       "reauth_confirm": {
         "title": "Re-authenticate Electrolux / AEG",
-        "description": "Your tokens are no longer valid. Generate fresh tokens at {dashboard} and paste them here.",
+        "description": "Your tokens have expired (rare). Get fresh ones quickly:\n\n1. Open {dashboard} and sign in.\n2. Generate a **new** token pair (Access + Refresh token).\n3. Your **API Key** can be reused unchanged.\n\nReady? Then tap \"Next\".",
+        "menu_options": {
+          "reauth_credentials": "Next — enter new tokens"
+        }
+      },
+      "reauth_credentials": {
+        "title": "Re-authenticate — enter tokens",
+        "description": "Paste the freshly generated values. The API Key can stay the same.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
           "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "Same as before (or a new one from \"API Keys\").",
+          "access_token": "The short-lived token from the new pair.",
+          "refresh_token": "The long token from the new pair."
         }
       }
     },
     "error": {
-      "invalid_auth": "Authentication failed. Check the API key and tokens.",
-      "cannot_connect": "Could not connect to the Electrolux API.",
-      "unknown": "Unexpected error."
+      "invalid_auth": "Authentication failed. Check the API key, access and refresh token — best to generate fresh ones in the portal.",
+      "cannot_connect": "Could not connect to the Electrolux API. Please try again later.",
+      "unknown": "Unexpected error. Please try again."
     },
     "abort": {
       "already_configured": "This account is already configured.",
-      "reauth_successful": "Re-authentication was successful.",
-      "wrong_account": "These credentials belong to a different Electrolux account than the one being re-authenticated. Use tokens from the same account."
+      "reauth_successful": "Re-authentication successful — your appliances are connected again.",
+      "wrong_account": "These tokens belong to a different Electrolux account than the one being re-authenticated. Use tokens from the same account."
     }
   },
   "options": {

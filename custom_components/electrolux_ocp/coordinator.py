@@ -84,6 +84,10 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
     async def _async_setup(self) -> None:
         """Einmalige Einrichtung: API-Client bauen und Geräteliste laden."""
         session = async_get_clientsession(self.hass)
+        # HÄRTUNG: vor dem ersten API-Aufruf die frischesten Tokens wählen
+        # (Config-Entry vs. redundanter Sofort-Store) — fängt den Neustart-Race
+        # ab, bei dem ein rotierter Refresh-Token sonst verloren ginge.
+        await self._token_manager.async_prime()
         try:
             async with asyncio.timeout(API_TIMEOUT):
                 self.api = ElectroluxHubAPI(session, self._token_manager)

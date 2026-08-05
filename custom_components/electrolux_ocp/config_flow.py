@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -25,6 +26,8 @@ from .const import (
     CONF_API_KEY,
     CONF_REFRESH_TOKEN,
     CONF_SCAN_INTERVAL,
+    CONF_TOKEN_TS,
+    DASHBOARD_URL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
@@ -83,52 +86,71 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _entry_data(self, user_input: dict[str, Any]) -> dict[str, Any]:
+        """Baue die zu speichernden Entry-Daten inkl. Härtungs-Zeitstempel."""
+        return {
+            CONF_API_KEY: user_input[CONF_API_KEY].strip(),
+            CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN].strip(),
+            CONF_REFRESH_TOKEN: user_input[CONF_REFRESH_TOKEN].strip(),
+            # Frischer Zeitstempel -> gewinnt beim Setup-Abgleich gegen einen
+            # alten Sofort-Store (siehe token_manager.async_prime).
+            CONF_TOKEN_TS: time.time(),
+        }
+
+    async def _validate(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> str | None:
+        """Validiere die 3 Werte; fülle errors und gib den Fingerprint zurück."""
+        try:
+            return await _validate_credentials(
+                self.hass,
+                user_input[CONF_API_KEY],
+                user_input[CONF_ACCESS_TOKEN],
+                user_input[CONF_REFRESH_TOKEN],
+            )
+        except ClientResponseError as err:
+            errors["base"] = "invalid_auth" if err.status in (401, 403) else "cannot_connect"
+        except ValueError:
+            errors["base"] = "invalid_auth"
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Unerwarteter Fehler bei der Validierung")
+            _LOGGER.debug("Detail: %s", scrub_secrets(str(err)))
+            errors["base"] = "unknown"
+        return None
+
+    # -- Wizard: Erst-Setup --------------------------------------------------
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Erster Schritt: 3 Tokens vom Developer-Dashboard erfassen."""
-        errors: dict[str, str] = {}
+        """Schritt 1 (Wizard-Intro): erklärt in Klartext, wie man die 3 Werte
+        holt. Weiter führt zur Eingabe."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["credentials"],
+            description_placeholders={"dashboard": DASHBOARD_URL},
+        )
 
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Schritt 2: die 3 Werte erfassen (mit Feld-Hilfen aus den Strings)."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                fingerprint = await _validate_credentials(
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ACCESS_TOKEN],
-                    user_input[CONF_REFRESH_TOKEN],
-                )
-            except ClientResponseError as err:
-                if err.status in (401, 403):
-                    errors["base"] = "invalid_auth"
-                else:
-                    errors["base"] = "cannot_connect"
-            except ValueError:
-                errors["base"] = "invalid_auth"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.error("Unerwarteter Fehler bei der Validierung")
-                _LOGGER.debug("Detail: %s", scrub_secrets(str(err)))
-                errors["base"] = "unknown"
-            else:
+            fingerprint = await self._validate(user_input, errors)
+            if fingerprint is not None:
                 await self.async_set_unique_id(fingerprint)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title="Electrolux / AEG",
-                    data={
-                        CONF_API_KEY: user_input[CONF_API_KEY].strip(),
-                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN].strip(),
-                        CONF_REFRESH_TOKEN: user_input[CONF_REFRESH_TOKEN].strip(),
-                    },
+                    title="Electrolux / AEG", data=self._entry_data(user_input)
                 )
-
         return self.async_show_form(
-            step_id="user",
+            step_id="credentials",
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "dashboard": "https://developer.electrolux.one/dashboard"
-            },
+            description_placeholders={"dashboard": DASHBOARD_URL},
         )
 
+    # -- Wizard: Re-Auth (Tokens abgelaufen) ---------------------------------
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -138,53 +160,35 @@ class ElectroluxOcpConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Bestätige die neuen Tokens im Reauth-Flow."""
+        """Reauth-Intro: erklärt den Weg, dann weiter zur Eingabe."""
+        return self.async_show_menu(
+            step_id="reauth_confirm",
+            menu_options=["reauth_credentials"],
+            description_placeholders={"dashboard": DASHBOARD_URL},
+        )
+
+    async def async_step_reauth_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reauth-Eingabe: neue Werte erfassen + Konto-Abgleich."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
-
         if user_input is not None:
-            try:
-                fingerprint = await _validate_credentials(
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ACCESS_TOKEN],
-                    user_input[CONF_REFRESH_TOKEN],
-                )
-            except ClientResponseError as err:
-                errors["base"] = (
-                    "invalid_auth" if err.status in (401, 403) else "cannot_connect"
-                )
-            except ValueError:
-                errors["base"] = "invalid_auth"
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.error("Unerwarteter Fehler bei der Reauth-Validierung")
-                _LOGGER.debug("Detail: %s", scrub_secrets(str(err)))
-                errors["base"] = "unknown"
-            else:
-                # Konto-Abgleich: die neuen Tokens müssen zum selben Konto gehören
-                # wie der Entry, sonst würde ein Entry still auf ein fremdes Konto
-                # umgebogen. Fingerprint = sortierte Appliance-IDs = unique_id.
+            fingerprint = await self._validate(user_input, errors)
+            if fingerprint is not None:
                 if (
                     reauth_entry.unique_id is not None
                     and fingerprint != reauth_entry.unique_id
                 ):
                     return self.async_abort(reason="wrong_account")
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data={
-                        CONF_API_KEY: user_input[CONF_API_KEY].strip(),
-                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN].strip(),
-                        CONF_REFRESH_TOKEN: user_input[CONF_REFRESH_TOKEN].strip(),
-                    },
+                    reauth_entry, data=self._entry_data(user_input)
                 )
-
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id="reauth_credentials",
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "dashboard": "https://developer.electrolux.one/dashboard"
-            },
+            description_placeholders={"dashboard": DASHBOARD_URL},
         )
 
     @staticmethod

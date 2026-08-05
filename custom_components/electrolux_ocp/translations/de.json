@@ -2,33 +2,57 @@
   "config": {
     "step": {
       "user": {
-        "title": "Electrolux / AEG (OCP Developer-API)",
-        "description": "Lege unter {dashboard} einen API Key an und erzeuge dort einen Access Token sowie einen Refresh Token. Trage alle drei Werte hier ein. Behandle diese Zugangsdaten vertraulich.",
+        "title": "Electrolux / AEG verbinden",
+        "description": "So bekommst Du Deine Zugangsdaten (einmalig, ca. 3 Minuten):\n\n1. Öffne das Electrolux-Entwickler-Portal: {dashboard}\n2. Melde Dich an — mit **demselben Konto wie in der Electrolux-/AEG-App** (dort, wo Deine Geräte hängen).\n3. Kopiere Deinen **API Key** (im Dashboard unter „API Keys“).\n4. Erzeuge dort ein Token-Paar (Knopf „Generate token“ bzw. „Authorize“) und kopiere **Access Token** und **Refresh Token**.\n\nHast Du alle drei Werte? Dann tippe unten auf „Weiter“.",
+        "menu_options": {
+          "credentials": "Weiter — ich habe API Key, Access- & Refresh-Token"
+        }
+      },
+      "credentials": {
+        "title": "Zugangsdaten eintragen",
+        "description": "Füge die drei Werte aus dem Portal ein. Sie bleiben nur in Deinem Home Assistant.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
           "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "Aus dem Dashboard, Abschnitt „API Keys“.",
+          "access_token": "Das kurzlebige Token aus dem eben erzeugten Paar.",
+          "refresh_token": "Das lange Token aus demselben Paar — es erneuert sich künftig automatisch."
         }
       },
       "reauth_confirm": {
         "title": "Electrolux / AEG neu anmelden",
-        "description": "Deine Tokens sind nicht mehr gültig. Erzeuge unter {dashboard} neue Tokens und trage sie hier ein.",
+        "description": "Deine Tokens sind abgelaufen (passiert selten). Hol Dir schnell frische:\n\n1. Öffne {dashboard} und melde Dich an.\n2. Erzeuge ein **neues** Token-Paar (Access- + Refresh-Token).\n3. Deinen **API Key** kannst Du unverändert wiederverwenden.\n\nBereit? Dann tippe auf „Weiter“.",
+        "menu_options": {
+          "reauth_credentials": "Weiter — neue Tokens eintragen"
+        }
+      },
+      "reauth_credentials": {
+        "title": "Neu anmelden — Tokens eintragen",
+        "description": "Füge die frisch erzeugten Werte ein. Der API Key kann derselbe bleiben.",
         "data": {
           "api_key": "API Key",
           "access_token": "Access Token",
           "refresh_token": "Refresh Token"
+        },
+        "data_description": {
+          "api_key": "Derselbe wie bisher (oder ein neuer aus „API Keys“).",
+          "access_token": "Das kurzlebige Token aus dem neuen Paar.",
+          "refresh_token": "Das lange Token aus dem neuen Paar."
         }
       }
     },
     "error": {
-      "invalid_auth": "Anmeldung fehlgeschlagen. Prüfe API Key und Tokens.",
-      "cannot_connect": "Verbindung zur Electrolux-API nicht möglich.",
-      "unknown": "Unerwarteter Fehler."
+      "invalid_auth": "Anmeldung fehlgeschlagen. Prüfe API Key, Access- und Refresh-Token — am besten frisch im Portal erzeugen.",
+      "cannot_connect": "Keine Verbindung zur Electrolux-API. Bitte später erneut versuchen.",
+      "unknown": "Unerwarteter Fehler. Bitte erneut versuchen."
     },
     "abort": {
       "already_configured": "Dieses Konto ist bereits eingerichtet.",
-      "reauth_successful": "Die erneute Anmeldung war erfolgreich.",
-      "wrong_account": "Diese Zugangsdaten gehören zu einem anderen Electrolux-Konto als dem, das neu angemeldet wird. Verwende Tokens desselben Kontos."
+      "reauth_successful": "Neu-Anmeldung erfolgreich — Deine Geräte sind wieder verbunden.",
+      "wrong_account": "Diese Tokens gehören zu einem anderen Electrolux-Konto als dem, das neu angemeldet wird. Verwende Tokens desselben Kontos."
     }
   },
   "options": {
