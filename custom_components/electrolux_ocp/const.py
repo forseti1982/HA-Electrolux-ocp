@@ -38,7 +38,7 @@ DASHBOARD_URL: Final = "https://developer.electrolux.one/dashboard"
 
 # Mitgelieferte Lovelace-Karte (wird beim Setup automatisch registriert).
 # CARD_VERSION dient dem Cache-Busting — bei Änderung an der Karte erhöhen.
-CARD_VERSION: Final = "0.2.4"
+CARD_VERSION: Final = "0.2.5"
 CARD_FILENAME: Final = "electrolux-ocp-card.js"
 CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
 
@@ -48,6 +48,12 @@ CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
 # add_extra_js_url), damit `<electrolux-guides>` in der Karte definiert ist.
 GUIDES_FILENAME: Final = "electrolux-ocp-guides.js"
 GUIDES_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-guides.js"
+
+# Mitgelieferte Kaffeevollautomaten-Karte als eigenstaendiges Custom-Element
+# `coffee-machine-card`. Wird ueber denselben Mechanismus wie die Karte und die
+# Guides registriert (Static-Path + add_extra_js_url).
+COFFEE_FILENAME: Final = "coffee-machine-card.js"
+COFFEE_URL_PATH: Final = "/electrolux_ocp/coffee-machine-card.js"
 
 # ---------------------------------------------------------------------------
 # Kuratierte Metadaten für bekannte Geräte-Eigenschaften ("reported"-Keys).

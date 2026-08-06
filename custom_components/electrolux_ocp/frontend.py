@@ -17,6 +17,8 @@ from .const import (
     CARD_FILENAME,
     CARD_URL_PATH,
     CARD_VERSION,
+    COFFEE_FILENAME,
+    COFFEE_URL_PATH,
     DOMAIN,
     GUIDES_FILENAME,
     GUIDES_URL_PATH,
@@ -58,6 +60,20 @@ async def async_register_card(hass: HomeAssistant) -> None:
     else:
         _LOGGER.warning(
             "Guides-Modul nicht gefunden, Chips deaktiviert: %s", guides_path
+        )
+
+    # Kaffeevollautomaten-Karte (`coffee-machine-card`) mit DEMSELBEN Mechanismus
+    # registrieren. Fehlt die Datei, laeuft der Rest ohne die Kaffee-Karte weiter
+    # (rollback-sicher, kein harter Bruch).
+    coffee_path = Path(__file__).parent / "frontend" / COFFEE_FILENAME
+    if await hass.async_add_executor_job(coffee_path.is_file):
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(COFFEE_URL_PATH, str(coffee_path), True)]
+        )
+        add_extra_js_url(hass, f"{COFFEE_URL_PATH}?v={CARD_VERSION}")
+    else:
+        _LOGGER.warning(
+            "Kaffee-Karte nicht gefunden, uebersprungen: %s", coffee_path
         )
 
     await hass.http.async_register_static_paths(
