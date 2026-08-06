@@ -34,15 +34,37 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Interne/versteckte Options-Keys (Test-/Diagnose-Programme), die NIE in der
+# Bedienoberflaeche erscheinen duerfen. Jeder Options-Key, der eines dieser
+# Fragmente enthaelt (z. B. MACHINE_SETTINGS_HIDDEN_TEST), wird aus den
+# Select-Optionen entfernt -> verschwindet aus dem nativen Dropdown UND aus den
+# Programm-Pills der Karte. Ist der aktuell gemeldete Wert eine gefilterte
+# Option, liefert current_option sauber None (kein Crash, siehe unten).
+HIDDEN_OPTION_FRAGMENTS: tuple[str, ...] = ("_HIDDEN", "HIDDEN_TEST")
+
+
+def _is_hidden_option(value: Any) -> bool:
+    """True, wenn der Options-Key als intern/versteckt gilt (Fragment-Match)."""
+    up = str(value).upper()
+    return any(frag in up for frag in HIDDEN_OPTION_FRAGMENTS)
+
 
 def _values_list(cap: dict[str, Any]) -> list[str] | None:
-    """Extrahiere die Optionsliste aus einer Capability, sonst None."""
+    """Extrahiere die Optionsliste aus einer Capability, sonst None.
+
+    Versteckte/interne Options-Keys (siehe HIDDEN_OPTION_FRAGMENTS) werden
+    herausgefiltert, bevor die Liste an die Entitaet geht.
+    """
     values = cap.get("values")
+    raw: list[str] | None = None
     if isinstance(values, dict) and values:
-        return list(values.keys())
-    if isinstance(values, list) and values:
-        return [str(v) for v in values]
-    return None
+        raw = list(values.keys())
+    elif isinstance(values, list) and values:
+        raw = [str(v) for v in values]
+    if raw is None:
+        return None
+    filtered = [v for v in raw if not _is_hidden_option(v)]
+    return filtered or None
 
 
 async def async_setup_entry(

@@ -38,7 +38,7 @@ DASHBOARD_URL: Final = "https://developer.electrolux.one/dashboard"
 
 # Mitgelieferte Lovelace-Karte (wird beim Setup automatisch registriert).
 # CARD_VERSION dient dem Cache-Busting — bei Änderung an der Karte erhöhen.
-CARD_VERSION: Final = "0.2.3"
+CARD_VERSION: Final = "0.2.4"
 CARD_FILENAME: Final = "electrolux-ocp-card.js"
 CARD_URL_PATH: Final = "/electrolux_ocp/electrolux-ocp-card.js"
 
@@ -138,6 +138,7 @@ TRANSLATED_SENSOR_KEYS: Final[set[str]] = {
     "time_to_end",
     "total_cycle_counter",
     "cpv",
+    "program_u_i_d",
 }
 
 TRANSLATED_BINARY_KEYS: Final[set[str]] = {

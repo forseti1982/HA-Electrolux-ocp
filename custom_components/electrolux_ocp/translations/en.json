@@ -188,6 +188,19 @@
       },
       "cpv": {
         "name": "CPV"
+      },
+      "program_u_i_d": {
+        "name": "Program",
+        "state": {
+          "ECO": "Eco",
+          "AUTO": "Auto",
+          "QUICK30": "Quick 30",
+          "QUICK60": "Quick 60",
+          "NORMAL90": "Normal 90°",
+          "120_MIN": "120 minutes",
+          "RINSE": "Rinse",
+          "MACHINE_CARE": "Machine care"
+        }
       }
     },
     "binary_sensor": {

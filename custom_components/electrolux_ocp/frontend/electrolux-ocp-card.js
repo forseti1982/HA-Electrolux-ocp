@@ -48,6 +48,32 @@ const PROG_OPTS = {
   MACHINE_CARE: []
 };
 
+// Programm-Enum-Key (programUID) -> sauberes deutsches Label. Deckt die grosse
+// "PROGRAMM"-Anzeige UND die Programm-Pills ab, damit nie ein roher Enum mit
+// Unterstrichen erscheint. Umlaute NUR als \uXXXX (reiner ASCII-Quelltext).
+const PROG_LABELS = {
+  ECO: 'Eco',
+  AUTO: 'Automatik',
+  QUICK30: 'Schnell 30',
+  QUICK60: 'Schnell 60',
+  NORMAL90: 'Normal 90 Grad',
+  '120_MIN': '120 Minuten',
+  RINSE: 'Absp\u00fclen',
+  MACHINE_CARE: 'Maschinenpflege'
+};
+// Interne/versteckte Programme (Test/Diagnose), die NIE als Pill erscheinen.
+// Gleiche Logik wie der serverseitige Filter in select.py (Defense-in-Depth).
+const PROG_HIDDEN_RE = /_HIDDEN|HIDDEN_TEST/i;
+function progHidden(v) { return v != null && PROG_HIDDEN_RE.test(String(v)); }
+// Rohen (oder bereits uebersetzten) Programm-Wert auf ein sauberes Label mappen.
+// Idempotent: ein bereits deutsches Label (z. B. "Schnell 30") faellt auf sich
+// selbst zurueck, weil sein Upper-Case-Key nicht in PROG_LABELS liegt.
+function progLabel(v) {
+  if (v == null) return null;
+  const key = String(v).toUpperCase().trim();
+  return PROG_LABELS[key] || v;
+}
+
 // Bekannte Options-Schluessel (laengste zuerst fuer robustes endsWith-Matching).
 const OPT_KEYS = ['extra_silent_option', 'extra_power_option', 'glass_care_option', 'zone_clean_option', 'spray_zone_option', 'sanitize_option', 'one_rack_option', 'xtra_dry_option'];
 
@@ -377,7 +403,7 @@ if (!customElements.get('electrolux-ocp-card')) {
       const m = {
         demo: false, bucket, running: bucket === 'run', doorOpen, appState,
         doorSince: doorOpen ? this._since('door') : null,
-        program: programDisp || (prog && prog.current) || null, phase: phaseDisp || null, timeTxt, progress,
+        program: progLabel(programDisp || (prog && prog.current) || null), phase: phaseDisp || null, timeTxt, progress,
         stateLabel: doorOpen ? T.dOpen : labels[bucket],
         salt, saltShown, saltLow, rinse, rinseShown, rinseLow,
         remote, remoteMode, cmd, hasCtrl, prog, opts, optLock, delay
@@ -628,6 +654,17 @@ if (!customElements.get('electrolux-ocp-card')) {
     _seg(list, current, prefix) {
       return '<div class="seg">' + list.map((o, i) => '<button class="chip' + (o === current ? ' on' : '') + '" data-act="' + prefix + i + '" type="button">' + esc(o) + '</button>').join('') + '</div>';
     }
+    // Programm-Pills: rohe Enum-Keys der Live-Optionsliste, aber mit sauberem
+    // deutschen Label (progLabel) und OHNE interne/versteckte Testprogramme
+    // (progHidden). Der data-act-Index bleibt am ROH-Index i der Liste, damit
+    // _pickProg (liest dieselbe Live-Optionsliste per Index) das korrekte
+    // Programm waehlt. current == roher Enum-Key -> Vergleich bleibt roh.
+    _progSeg(list, current) {
+      return '<div class="seg">' + list.map((o, i) => {
+        if (progHidden(o)) return '';
+        return '<button class="chip' + (o === current ? ' on' : '') + '" data-act="p' + i + '" type="button">' + esc(progLabel(o)) + '</button>';
+      }).join('') + '</div>';
+    }
     _grp(label, inner) { return '<div class="grp"><span class="glbl">' + label + '</span>' + inner + '</div>'; }
 
     _ctrlBlock(m) {
@@ -639,7 +676,7 @@ if (!customElements.get('electrolux-ocp-card')) {
         let body = '';
         if (off) body += '<div class="hint"><span class="dot warn"></span>' + T.remoteOff + '</div>';
         else if (m.remoteMode === 'partial') body += '<div class="hint soft">' + T.remotePartial + '</div>';
-        if (m.prog && m.prog.list && m.prog.list.length) body += this._grp(T.prog, this._seg(m.prog.list, m.prog.current, 'p'));
+        if (m.prog && m.prog.list && m.prog.list.length) body += this._grp(T.prog, this._progSeg(m.prog.list, m.prog.current));
         if (m.opts && m.opts.length) {
           let tg = '';
           // Ein Sperr-Grund fuer die ganze Gruppe (Zustand/Programm), z. B.
