@@ -137,4 +137,7 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
             raise HomeAssistantError(
                 f"Kommando fehlgeschlagen: {err}"
             ) from err
-        await self.coordinator.async_request_refresh()
+        # Nachlauf statt einfacher Aktualisierung: erzwingt den schnellen
+        # Takt fuer die naechsten Minuten, damit der echte Start nicht
+        # in ein Leerlauf-Loch faellt.
+        await self.coordinator.async_boost()

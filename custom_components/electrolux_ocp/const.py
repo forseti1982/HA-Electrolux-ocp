@@ -49,6 +49,14 @@ RECOMMENDED_MIN_SCAN_INTERVAL: Final = 120
 # damit auf zwei Minuten genau getroffen. Und genau das Ende ist die Ansage.
 IDLE_SCAN_INTERVAL: Final = 600
 
+# Nach JEDEM Befehl aus Home Assistant wird fuer diese Dauer garantiert schnell
+# gepollt (Sekunden). Ohne das entsteht genau im wichtigsten Moment ein Loch:
+# Man startet eine Ladung, die API meldet im ersten Abruf noch den ALTEN
+# Zustand ("laeuft nicht"), der Takt drosselt auf Leerlauf — und der echte
+# Start faellt zehn Minuten in ein Loch. Martins Anforderung ist ausdruecklich:
+# beim Starten einer Ladung muss es schnell gehen.
+COMMAND_BOOST_SECONDS: Final = 300
+
 # Zustaende, die als "laeuft gerade" gelten. Unbekannte oder leere Zustaende
 # gelten bewusst als aktiv — im Zweifel lieber zu schnell als zu langsam.
 ACTIVE_APPLIANCE_STATES: Final = frozenset({

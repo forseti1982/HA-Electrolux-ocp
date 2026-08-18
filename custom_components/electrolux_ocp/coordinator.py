@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 from typing import NoReturn
 
@@ -19,6 +20,7 @@ from pyelectroluxgroup.appliance import Appliance
 
 from .const import (
     ACTIVE_APPLIANCE_STATES,
+    COMMAND_BOOST_SECONDS,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -113,6 +115,9 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
         # verlangt. Vorher genügte ein einziger Fehler.
         # Der eingestellte Takt gilt als SCHNELLER Takt (waehrend Betrieb).
         self._fast_interval = scan_interval
+        # Bis zu diesem Zeitpunkt wird unabhaengig vom gemeldeten Zustand
+        # schnell gepollt (siehe async_boost).
+        self._boost_bis: float = 0.0
         self._streaks = _STREAKS.setdefault(
             entry.entry_id, {"auth": 0, "forbidden": 0}
         )
@@ -244,6 +249,20 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
         self._streaks["forbidden"] = 0
         return dict(self._appliances)
 
+    async def async_boost(self) -> None:
+        """Nach einem Befehl: schnellen Takt erzwingen und sofort aktualisieren.
+
+        Wird von select/switch nach jedem gesendeten Kommando aufgerufen. Der
+        Zeitfenster-Ansatz ist noetig, weil die API unmittelbar nach dem Befehl
+        oft noch den alten Zustand liefert — ein reines async_request_refresh()
+        wuerde den Takt danach faelschlich auf Leerlauf stellen.
+        """
+        self._boost_bis = time.monotonic() + COMMAND_BOOST_SECONDS
+        schnell = timedelta(seconds=self._fast_interval)
+        if self.update_interval != schnell:
+            self.update_interval = schnell
+        await self.async_request_refresh()
+
     def _takt_anpassen(self) -> None:
         """Poll-Takt an den tatsaechlichen Betrieb anpassen.
 
@@ -252,6 +271,13 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Appliance]
         gedrosselt. Ist der Zustand unbekannt, gilt bewusst SCHNELL — im
         Zweifel lieber ein paar Abrufe zu viel als eine verpasste Meldung.
         """
+        # Nachlauf nach einem Befehl schlaegt den gemeldeten Zustand.
+        if time.monotonic() < self._boost_bis:
+            schnell = timedelta(seconds=self._fast_interval)
+            if self.update_interval != schnell:
+                self.update_interval = schnell
+            return
+
         aktiv = False
         for appliance in self._appliances.values():
             zustand = _gemeldeter_zustand(appliance)
