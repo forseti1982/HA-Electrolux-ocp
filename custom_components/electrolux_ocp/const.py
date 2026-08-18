@@ -26,9 +26,35 @@ TOKEN_STORE_KEY: Final = "electrolux_ocp_tokens"
 # Hinweis: Die Electrolux Developer-API ist rate-limitiert. Referenz-Clients
 # (homebridge-electrolux-devices) warnen ausdrücklich vor Poll-Intervallen
 # unter 120 Sekunden. Default daher konservativ, aber vom User anpassbar.
-DEFAULT_SCAN_INTERVAL: Final = 60
+# 18.08.2026: von 60 auf 120 angehoben. 60 lag unter der eigenen
+# Empfehlung (RECOMMENDED_MIN_SCAN_INTERVAL) und erzeugte doppelt so
+# viele Aufrufe gegen das dokumentierte Tageskontingent der
+# Electrolux-Entwickler-API. Ein Geschirrspueler laeuft eine Stunde —
+# 120 Sekunden Aufloesung genuegen dafuer vollauf.
+DEFAULT_SCAN_INTERVAL: Final = 120
 MIN_SCAN_INTERVAL: Final = 30
 RECOMMENDED_MIN_SCAN_INTERVAL: Final = 120
+
+# Takt im Leerlauf, also wenn KEIN Geraet ein Programm faehrt (Sekunden).
+# 18.08.2026 eingefuehrt: Ein fester schneller Takt rund um die Uhr ist
+# Verschwendung. Schnelle Werte braucht nur EINE Sache wirklich — die
+# Fertig-Ansage der Spuelmaschine, und die zaehlt nur waehrend ein Programm
+# laeuft. Salz, Klarspueler und Restzeit vertragen jede Traegheit.
+# Rechnung fuer einen Tag mit zwei Stunden Betrieb:
+#   vorher 60 s durchgehend   -> 1440 Abrufe
+#   fest   120 s durchgehend  ->  720 Abrufe
+#   anpassend (600/120)       ->  ~190 Abrufe
+# Der Preis: der START eines Programms wird bis zu 10 Minuten spaet bemerkt.
+# Das ist folgenlos — sobald er bemerkt ist, wird schnell gepollt und das ENDE
+# damit auf zwei Minuten genau getroffen. Und genau das Ende ist die Ansage.
+IDLE_SCAN_INTERVAL: Final = 600
+
+# Zustaende, die als "laeuft gerade" gelten. Unbekannte oder leere Zustaende
+# gelten bewusst als aktiv — im Zweifel lieber zu schnell als zu langsam.
+ACTIVE_APPLIANCE_STATES: Final = frozenset({
+    "RUNNING", "RUNNINGONDEMAND", "RUNNING_ON_DEMAND",
+    "DELAYEDSTART", "DELAYED_START", "PAUSED", "CYCLEACTIVE", "CYCLE_ACTIVE",
+})
 MIN_UPDATE_INTERVAL: Final = timedelta(seconds=MIN_SCAN_INTERVAL)
 
 MANUFACTURER: Final = "Electrolux Group"
