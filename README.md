@@ -50,7 +50,7 @@ flowchart LR
 - 🍽️ **Geschirrspüler-Fokus** — Zustand, Programm, Phase, Restlaufzeit, Tür, Salz-/Klarspüler-Warnung.
 - 🎛️ **Lesen & Steuern** — `sensor`/`binary_sensor` + `select`/`switch`.
 - 🩺 **Diagnose mit redigierten Secrets** — Tokens/Seriennummern/PII werden automatisch entfernt.
-- 🌍 **Mehrsprachig** — Deutsch (Du) & Englisch.
+- 🌍 **Mehrsprachig** — Deutsch (Du), Englisch, Französisch, Italienisch, Spanisch (Namen **und** Zustands-Enums).
 
 ## 📦 Installation
 
@@ -70,7 +70,7 @@ Ordner `custom_components/electrolux_ocp` nach `config/custom_components/` kopie
 1. Auf [developer.electrolux.one](https://developer.electrolux.one) mit dem **gleichen Konto** wie in der Electrolux-/AEG-App anmelden.
 2. Im [Dashboard](https://developer.electrolux.one/dashboard) einen **API Key** erstellen sowie **Access Token** und **Refresh Token** erzeugen.
 3. In HA: **Einstellungen → Geräte & Dienste → Integration hinzufügen → „Electrolux OCP"**, dann alle **drei** Werte eintragen.
-4. Optional: **Abfrage-Intervall** in den Optionen anpassen (Default 60 s; die API ist rate-limitiert, ≥ 120 s empfohlen).
+4. Optional: **Abfrage-Intervall** in den Optionen anpassen (Default **120 s**; die API ist rate-limitiert). Im Leerlauf drosselt die Integration selbstständig auf 600 s und schaltet bei laufendem Programm oder nach einem Befehl wieder auf den schnellen Takt.
 
 ## ✅ Unterstützt
 
@@ -127,6 +127,21 @@ entities:
 > gemeldeten Properties). Obiges Mapping ist ein Beispiel — passe die
 > Entity-IDs an die bei dir tatsächlich angelegten Entitäten an. Alle Felder
 > sind optional; nur vorhandene werden angezeigt.
+
+## 🧠 Für Mitwirkende: die Zentrale
+
+Dieses Repo bringt eine **Entwickler-Zentrale** mit — das gebündelte Wissen über
+Architektur, API-Eigenheiten und getroffene Entscheidungen, damit niemand
+zweimal dieselbe Falle findet:
+
+| Ort | Inhalt |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | Einstieg: Regeln, Repo-Karte, Arbeitsabläufe |
+| [`.claude/brain/`](.claude/brain/) | Architektur, OCP-API, Geräte-Wissen, Entscheidungs-Protokoll, offene Fragen |
+| [`.claude/skills/`](.claude/skills/) | Anleitungen: Entität bauen, Release, Karten, `# VERIFY` schließen |
+| `bash .claude/pruefen.sh` | Alle lokalen Prüfungen auf einmal (Syntax, JSON, ASCII-Vertrag, Übersetzungen, Version) |
+
+Vor einem Pull Request: `bash .claude/pruefen.sh` muss mit 0 durchlaufen.
 
 ## ⚠️ Disclaimer
 

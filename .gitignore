@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Home Assistant / lokale Testinstanz
+.storage/
+secrets.yaml
+*.log
+
+# Diagnose-Exporte: enthalten geraetebezogene Daten und gehoeren NIE ins Repo
+diagnostics*.json
+
+# Werkzeuge
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.DS_Store
+
+# Persoenliche Claude-Einstellungen (die geteilte settings.json bleibt versioniert)
+.claude/settings.local.json
