@@ -24,6 +24,7 @@ from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import (
     ElectroluxEntity,
     build_command,
+    enum_state,
     get_capabilities,
     get_nested,
     get_reported,
@@ -110,7 +111,14 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
             self._attr_translation_key = slug
         else:
             self._attr_name = humanize(key)
-        self._attr_options = options
+        # Nach aussen (HA-Zustand, Dropdown, Übersetzung) zeigt die Entität
+        # Slugs — HA verlangt fuer state.<option> kleine Schluessel. Nach innen
+        # (send_command) MUSS der rohe Geräte-Key gehen, sonst lehnt OCP ab.
+        # _option_map haelt beide Seiten zusammen: slug -> Rohwert.
+        self._option_map: dict[str, str] = {}
+        for raw in options:
+            self._option_map.setdefault(str(enum_state(raw)), str(raw))
+        self._attr_options = list(self._option_map)
 
     @property
     def current_option(self) -> str | None:
@@ -121,18 +129,21 @@ class ElectroluxSelect(ElectroluxEntity, SelectEntity):
         value = get_nested(get_reported(appliance), self._key)
         if value is None:
             return None
-        value = str(value)
-        return value if value in self._attr_options else None
+        option = str(enum_state(value))
+        return option if option in self._option_map else None
 
     async def async_select_option(self, option: str) -> None:
         """Sende das Kommando zum Setzen der Option."""
         appliance = self.appliance
         if appliance is None:
             raise HomeAssistantError("Gerät nicht verfügbar")
+        # Zurueck auf den rohen Geraete-Key (ready_to_start -> READY_TO_START).
+        # Unbekannte Option: unveraendert senden statt still zu schlucken.
+        raw_option = self._option_map.get(option, option)
         try:
             # OCP erwartet verschachtelte Container fuer Slash-Keys, z. B.
             # {"userSelections": {"programUID": option}}. Flacher Body -> Ablehnung.
-            await appliance.send_command(build_command(self._key, option))
+            await appliance.send_command(build_command(self._key, raw_option))
         except Exception as err:  # noqa: BLE001
             raise HomeAssistantError(
                 f"Kommando fehlgeschlagen: {err}"

@@ -17,13 +17,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ENUM_STATE_SENSOR_KEYS,
     KNOWN_BINARY_KEYS,
     KNOWN_SENSOR_KEYS,
     TOTAL_INCREASING_KEYS,
     TRANSLATED_SENSOR_KEYS,
 )
 from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
-from .entity import ElectroluxEntity, get_reported, humanize, slugify_key
+from .entity import (
+    ElectroluxEntity,
+    enum_state,
+    get_reported,
+    humanize,
+    slugify_key,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +80,9 @@ class ElectroluxSensor(ElectroluxEntity, SensorEntity):
             self._attr_translation_key = slug
         else:
             self._attr_name = humanize(key)
+        # Enum-Sensoren melden ihren Zustand als Slug (ready_to_start), damit
+        # die Übersetzungsschlüssel HA-konform klein sein können.
+        self._is_enum = slug in ENUM_STATE_SENSOR_KEYS
 
         meta = KNOWN_SENSOR_KEYS.get(key)
         if meta is not None:
@@ -99,4 +109,5 @@ class ElectroluxSensor(ElectroluxEntity, SensorEntity):
         appliance = self.appliance
         if appliance is None:
             return None
-        return get_reported(appliance).get(self._key)
+        value = get_reported(appliance).get(self._key)
+        return enum_state(value) if self._is_enum else value

@@ -12,6 +12,11 @@ from pyelectroluxgroup.appliance import Appliance
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import ElectroluxDataUpdateCoordinator
 
+# In HA reservierte Zustände: ein Entitätszustand mit diesem Wort bedeutet
+# "Entität kaputt/ohne Wert" — ein gleichlautender GERÄTE-Enum darf dort nicht
+# landen (siehe enum_state).
+RESERVED_STATES = frozenset({"unavailable", "unknown"})
+
 
 def get_reported(appliance: Appliance) -> dict[str, Any]:
     """Gib das gemeldete State-Dict eines Geräts robust zurück.
@@ -132,6 +137,41 @@ def slugify_key(key: str) -> str:
     lowered = spaced.lower()
     collapsed = re.sub(r"[^a-z0-9]+", "_", lowered)
     return collapsed.strip("_")
+
+
+def enum_state(value: Any) -> Any:
+    """Normalisiere einen Geräte-Enum auf einen HA-konformen Zustands-Slug.
+
+    OCP meldet Enums in GROSSSCHREIBUNG (``READY_TO_START``). Home Assistant
+    verlangt für Zustands-Übersetzungsschlüssel aber ``[a-z0-9-_]+`` — hassfest
+    bricht bei Grossschreibung mit ``Invalid translation key`` ab. Darum ist der
+    Slug der kanonische HA-Zustand; der rohe Geräte-Wert wandert nur noch in
+    Kommandos (siehe ``ElectroluxSelect._option_map``).
+
+    Nicht-Strings (Zahlen) bleiben unverändert, damit ``state_class`` und
+    Langzeitstatistik nicht brechen.
+
+    Meldet das Gerät selbst ``UNAVAILABLE`` oder ``UNKNOWN`` (der
+    Geschirrspüler tut das für ``cyclePhase``, solange kein Programm läuft),
+    darf daraus NICHT ``unavailable``/``unknown`` werden: das sind in HA
+    reservierte Zustände, die Entität würde als kaputt gelten. Solche Werte
+    bekommen das Präfix ``device_``.
+
+    Beispiele:
+        ``READY_TO_START`` -> ``ready_to_start``
+        ``120_MIN`` -> ``120_min``
+        ``NORMAL90`` -> ``normal90``
+        ``UNAVAILABLE`` -> ``device_unavailable``
+    """
+    import re
+
+    if not isinstance(value, str):
+        return value
+    slug = re.sub(r"[^a-z0-9_-]+", "_", value.strip().lower()).strip("_")
+    if slug in RESERVED_STATES:
+        return f"device_{slug}"
+    # Leerer Slug (z. B. Wert war nur "???") -> Rohwert behalten, nie None.
+    return slug or value
 
 
 class ElectroluxEntity(CoordinatorEntity[ElectroluxDataUpdateCoordinator]):

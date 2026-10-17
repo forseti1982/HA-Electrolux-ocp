@@ -71,100 +71,100 @@
       "appliance_state": {
         "name": "Geräte-Status",
         "state": {
-          "IDLE": "Bereit",
-          "READY_TO_START": "Startbereit",
-          "RUNNING": "Läuft",
-          "PAUSED": "Pausiert",
-          "DELAYED_START": "Startvorwahl",
-          "END_OF_CYCLE": "Fertig",
-          "OFF": "Aus",
-          "ALARM": "Störung"
+          "idle": "Bereit",
+          "ready_to_start": "Startbereit",
+          "running": "Läuft",
+          "paused": "Pausiert",
+          "delayed_start": "Startvorwahl",
+          "end_of_cycle": "Fertig",
+          "off": "Aus",
+          "alarm": "Störung"
         }
       },
       "appliance_mode": {
         "name": "Geräte-Modus",
         "state": {
-          "NORMAL": "Normal",
-          "DEMO": "Demo",
-          "SERVICE": "Service"
+          "normal": "Normal",
+          "demo": "Demo",
+          "service": "Service"
         }
       },
       "cycle_phase": {
         "name": "Zyklus-Phase",
         "state": {
-          "PREWASH": "Vorwäsche",
-          "MAINWASH": "Hauptwäsche",
-          "COLDRINSE": "Kaltspülen",
-          "HOTRINSE": "Klarspülen",
-          "EXTRARINSE": "Extra-Spülen",
-          "DRYING": "Trocknen",
-          "ADO_DRYING": "Trocknen (Tür-Auto)",
-          "UNAVAILABLE": "—"
+          "prewash": "Vorwäsche",
+          "mainwash": "Hauptwäsche",
+          "coldrinse": "Kaltspülen",
+          "hotrinse": "Klarspülen",
+          "extrarinse": "Extra-Spülen",
+          "drying": "Trocknen",
+          "ado_drying": "Trocknen (Tür-Auto)",
+          "device_unavailable": "—"
         }
       },
       "water_hardness": {
         "name": "Wasserhärte",
         "state": {
-          "SOFT": "Weich",
-          "MEDIUM": "Mittel",
-          "HARD": "Hart",
-          "STEP_0": "Stufe 0",
-          "STEP_1": "Stufe 1",
-          "STEP_2": "Stufe 2",
-          "STEP_3": "Stufe 3",
-          "STEP_4": "Stufe 4",
-          "STEP_5": "Stufe 5",
-          "STEP_6": "Stufe 6",
-          "STEP_7": "Stufe 7",
-          "STEP_8": "Stufe 8",
-          "STEP_9": "Stufe 9",
-          "STEP_10": "Stufe 10"
+          "soft": "Weich",
+          "medium": "Mittel",
+          "hard": "Hart",
+          "step_0": "Stufe 0",
+          "step_1": "Stufe 1",
+          "step_2": "Stufe 2",
+          "step_3": "Stufe 3",
+          "step_4": "Stufe 4",
+          "step_5": "Stufe 5",
+          "step_6": "Stufe 6",
+          "step_7": "Stufe 7",
+          "step_8": "Stufe 8",
+          "step_9": "Stufe 9",
+          "step_10": "Stufe 10"
         }
       },
       "end_of_cycle_sound": {
         "name": "Signalton am Ende",
         "state": {
-          "NO_SOUND": "Kein Ton",
-          "SHORT_SOUND": "Kurzer Ton"
+          "no_sound": "Kein Ton",
+          "short_sound": "Kurzer Ton"
         }
       },
       "display_on_floor": {
         "name": "Boden-Projektion",
         "state": {
-          "GREEN": "Grün",
-          "OFF": "Aus"
+          "green": "Grün",
+          "off": "Aus"
         }
       },
       "handle_free_door_opening": {
         "name": "Griffloses Türöffnen",
         "state": {
-          "OFF": "Aus",
-          "SINGLE_PUSH": "Einfacher Druck"
+          "off": "Aus",
+          "single_push": "Einfacher Druck"
         }
       },
       "network_interface_always_on": {
         "name": "Netzwerk dauerhaft an",
         "state": {
-          "ON": "An",
-          "OFF": "Aus"
+          "on": "An",
+          "off": "Aus"
         }
       },
       "remote_control": {
         "name": "Fernsteuerung",
         "state": {
-          "DISABLED": "Deaktiviert",
-          "ENABLED": "Aktiviert",
-          "NOT_SAFETY_RELEVANT_ENABLED": "Teilweise (nur unkritische Befehle)",
-          "TEMPORARY_LOCKED": "Vorübergehend gesperrt"
+          "disabled": "Deaktiviert",
+          "enabled": "Aktiviert",
+          "not_safety_relevant_enabled": "Teilweise (nur unkritische Befehle)",
+          "temporary_locked": "Vorübergehend gesperrt"
         }
       },
       "display_light": {
         "name": "Display-Helligkeit",
         "state": {
-          "DISPLAY_LIGHT_0": "Stufe 0",
-          "DISPLAY_LIGHT_1": "Stufe 1",
-          "DISPLAY_LIGHT_2": "Stufe 2",
-          "DISPLAY_LIGHT_3": "Stufe 3"
+          "display_light_0": "Stufe 0",
+          "display_light_1": "Stufe 1",
+          "display_light_2": "Stufe 2",
+          "display_light_3": "Stufe 3"
         }
       },
       "connectivity_state": {
@@ -192,14 +192,14 @@
       "program_u_i_d": {
         "name": "Programm",
         "state": {
-          "ECO": "Eco",
-          "AUTO": "Automatik",
-          "QUICK30": "Schnell 30",
-          "QUICK60": "Schnell 60",
-          "NORMAL90": "Normal 90 Grad",
-          "120_MIN": "120 Minuten",
-          "RINSE": "Abspülen",
-          "MACHINE_CARE": "Maschinenpflege"
+          "eco": "Eco",
+          "auto": "Automatik",
+          "quick30": "Schnell 30",
+          "quick60": "Schnell 60",
+          "normal90": "Normal 90 Grad",
+          "120_min": "120 Minuten",
+          "rinse": "Abspülen",
+          "machine_care": "Maschinenpflege"
         }
       }
     },
@@ -233,72 +233,72 @@
       "water_hardness": {
         "name": "Wasserhärte",
         "state": {
-          "SOFT": "Weich",
-          "MEDIUM": "Mittel",
-          "HARD": "Hart",
-          "STEP_0": "Stufe 0",
-          "STEP_1": "Stufe 1",
-          "STEP_2": "Stufe 2",
-          "STEP_3": "Stufe 3",
-          "STEP_4": "Stufe 4",
-          "STEP_5": "Stufe 5",
-          "STEP_6": "Stufe 6",
-          "STEP_7": "Stufe 7",
-          "STEP_8": "Stufe 8",
-          "STEP_9": "Stufe 9",
-          "STEP_10": "Stufe 10"
+          "soft": "Weich",
+          "medium": "Mittel",
+          "hard": "Hart",
+          "step_0": "Stufe 0",
+          "step_1": "Stufe 1",
+          "step_2": "Stufe 2",
+          "step_3": "Stufe 3",
+          "step_4": "Stufe 4",
+          "step_5": "Stufe 5",
+          "step_6": "Stufe 6",
+          "step_7": "Stufe 7",
+          "step_8": "Stufe 8",
+          "step_9": "Stufe 9",
+          "step_10": "Stufe 10"
         }
       },
       "end_of_cycle_sound": {
         "name": "Signalton am Ende",
         "state": {
-          "NO_SOUND": "Kein Ton",
-          "SHORT_SOUND": "Kurzer Ton"
+          "no_sound": "Kein Ton",
+          "short_sound": "Kurzer Ton"
         }
       },
       "display_on_floor": {
         "name": "Boden-Projektion",
         "state": {
-          "GREEN": "Grün",
-          "OFF": "Aus"
+          "green": "Grün",
+          "off": "Aus"
         }
       },
       "handle_free_door_opening": {
         "name": "Griffloses Türöffnen",
         "state": {
-          "OFF": "Aus",
-          "SINGLE_PUSH": "Einfacher Druck"
+          "off": "Aus",
+          "single_push": "Einfacher Druck"
         }
       },
       "network_interface_always_on": {
         "name": "Netzwerk dauerhaft an",
         "state": {
-          "ON": "An",
-          "OFF": "Aus"
+          "on": "An",
+          "off": "Aus"
         }
       },
       "execute_command": {
         "name": "Kommando ausführen",
         "state": {
-          "ON": "Ein",
-          "OFF": "Aus",
-          "PAUSE": "Pause",
-          "RESUME": "Fortsetzen",
-          "START": "Start",
-          "STOP": "Stopp"
+          "on": "Ein",
+          "off": "Aus",
+          "pause": "Pause",
+          "resume": "Fortsetzen",
+          "start": "Start",
+          "stop": "Stopp"
         }
       },
       "program_u_i_d": {
         "name": "Programm",
         "state": {
-          "ECO": "Eco",
-          "AUTO": "Automatik",
-          "QUICK30": "Schnell 30",
-          "QUICK60": "Schnell 60",
-          "NORMAL90": "Normal 90 Grad",
-          "120_MIN": "120 Minuten",
-          "RINSE": "Abspülen",
-          "MACHINE_CARE": "Maschinenpflege"
+          "eco": "Eco",
+          "auto": "Automatik",
+          "quick30": "Schnell 30",
+          "quick60": "Schnell 60",
+          "normal90": "Normal 90 Grad",
+          "120_min": "120 Minuten",
+          "rinse": "Abspülen",
+          "machine_care": "Maschinenpflege"
         }
       }
     },
@@ -309,8 +309,8 @@
       "network_interface_always_on": {
         "name": "Netzwerk dauerhaft an",
         "state": {
-          "ON": "An",
-          "OFF": "Aus"
+          "on": "An",
+          "off": "Aus"
         }
       },
       "water_hardness_sensor_enable": {
