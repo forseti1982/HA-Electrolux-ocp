@@ -181,6 +181,26 @@ TRANSLATED_SENSOR_KEYS: Final[set[str]] = {
     "program_u_i_d",
 }
 
+# Teilmenge von TRANSLATED_SENSOR_KEYS: Slugs, deren Werte ENUMS sind und für
+# die in translations/*.json ein ``state``-Block liegt. Nur diese Sensoren
+# bekommen ihren Wert über entity.enum_state() kleingeschrieben — die übrigen
+# (start_time, time_to_end, total_cycle_counter, cpv, rinse_aid_level) sind
+# Zahlen und müssen Zahlen bleiben, sonst bricht die Langzeitstatistik.
+ENUM_STATE_SENSOR_KEYS: Final[set[str]] = {
+    "appliance_state",
+    "appliance_mode",
+    "cycle_phase",
+    "water_hardness",
+    "end_of_cycle_sound",
+    "display_on_floor",
+    "handle_free_door_opening",
+    "network_interface_always_on",
+    "remote_control",
+    "display_light",
+    "connectivity_state",
+    "program_u_i_d",
+}
+
 TRANSLATED_BINARY_KEYS: Final[set[str]] = {
     "connectivity",
     "door_state",

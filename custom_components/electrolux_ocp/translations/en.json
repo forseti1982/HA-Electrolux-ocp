@@ -71,100 +71,100 @@
       "appliance_state": {
         "name": "Appliance state",
         "state": {
-          "IDLE": "Ready",
-          "READY_TO_START": "Ready to start",
-          "RUNNING": "Running",
-          "PAUSED": "Paused",
-          "DELAYED_START": "Delayed start",
-          "END_OF_CYCLE": "Done",
-          "OFF": "Off",
-          "ALARM": "Fault"
+          "idle": "Ready",
+          "ready_to_start": "Ready to start",
+          "running": "Running",
+          "paused": "Paused",
+          "delayed_start": "Delayed start",
+          "end_of_cycle": "Done",
+          "off": "Off",
+          "alarm": "Fault"
         }
       },
       "appliance_mode": {
         "name": "Appliance mode",
         "state": {
-          "NORMAL": "Normal",
-          "DEMO": "Demo",
-          "SERVICE": "Service"
+          "normal": "Normal",
+          "demo": "Demo",
+          "service": "Service"
         }
       },
       "cycle_phase": {
         "name": "Cycle phase",
         "state": {
-          "PREWASH": "Pre-wash",
-          "MAINWASH": "Main wash",
-          "COLDRINSE": "Cold rinse",
-          "HOTRINSE": "Rinse",
-          "EXTRARINSE": "Extra rinse",
-          "DRYING": "Drying",
-          "ADO_DRYING": "Drying (auto door)",
-          "UNAVAILABLE": "—"
+          "prewash": "Pre-wash",
+          "mainwash": "Main wash",
+          "coldrinse": "Cold rinse",
+          "hotrinse": "Rinse",
+          "extrarinse": "Extra rinse",
+          "drying": "Drying",
+          "ado_drying": "Drying (auto door)",
+          "device_unavailable": "—"
         }
       },
       "water_hardness": {
         "name": "Water hardness",
         "state": {
-          "SOFT": "Soft",
-          "MEDIUM": "Medium",
-          "HARD": "Hard",
-          "STEP_0": "Level 0",
-          "STEP_1": "Level 1",
-          "STEP_2": "Level 2",
-          "STEP_3": "Level 3",
-          "STEP_4": "Level 4",
-          "STEP_5": "Level 5",
-          "STEP_6": "Level 6",
-          "STEP_7": "Level 7",
-          "STEP_8": "Level 8",
-          "STEP_9": "Level 9",
-          "STEP_10": "Level 10"
+          "soft": "Soft",
+          "medium": "Medium",
+          "hard": "Hard",
+          "step_0": "Level 0",
+          "step_1": "Level 1",
+          "step_2": "Level 2",
+          "step_3": "Level 3",
+          "step_4": "Level 4",
+          "step_5": "Level 5",
+          "step_6": "Level 6",
+          "step_7": "Level 7",
+          "step_8": "Level 8",
+          "step_9": "Level 9",
+          "step_10": "Level 10"
         }
       },
       "end_of_cycle_sound": {
         "name": "End-of-cycle sound",
         "state": {
-          "NO_SOUND": "No sound",
-          "SHORT_SOUND": "Short sound"
+          "no_sound": "No sound",
+          "short_sound": "Short sound"
         }
       },
       "display_on_floor": {
         "name": "Floor beam",
         "state": {
-          "GREEN": "Green",
-          "OFF": "Off"
+          "green": "Green",
+          "off": "Off"
         }
       },
       "handle_free_door_opening": {
         "name": "Handle-free door opening",
         "state": {
-          "OFF": "Off",
-          "SINGLE_PUSH": "Single push"
+          "off": "Off",
+          "single_push": "Single push"
         }
       },
       "network_interface_always_on": {
         "name": "Network interface always on",
         "state": {
-          "ON": "On",
-          "OFF": "Off"
+          "on": "On",
+          "off": "Off"
         }
       },
       "remote_control": {
         "name": "Remote control",
         "state": {
-          "DISABLED": "Disabled",
-          "ENABLED": "Enabled",
-          "NOT_SAFETY_RELEVANT_ENABLED": "Partial (non-critical commands only)",
-          "TEMPORARY_LOCKED": "Temporarily locked"
+          "disabled": "Disabled",
+          "enabled": "Enabled",
+          "not_safety_relevant_enabled": "Partial (non-critical commands only)",
+          "temporary_locked": "Temporarily locked"
         }
       },
       "display_light": {
         "name": "Display brightness",
         "state": {
-          "DISPLAY_LIGHT_0": "Level 0",
-          "DISPLAY_LIGHT_1": "Level 1",
-          "DISPLAY_LIGHT_2": "Level 2",
-          "DISPLAY_LIGHT_3": "Level 3"
+          "display_light_0": "Level 0",
+          "display_light_1": "Level 1",
+          "display_light_2": "Level 2",
+          "display_light_3": "Level 3"
         }
       },
       "connectivity_state": {
@@ -192,14 +192,14 @@
       "program_u_i_d": {
         "name": "Program",
         "state": {
-          "ECO": "Eco",
-          "AUTO": "Auto",
-          "QUICK30": "Quick 30",
-          "QUICK60": "Quick 60",
-          "NORMAL90": "Normal 90°",
-          "120_MIN": "120 minutes",
-          "RINSE": "Rinse",
-          "MACHINE_CARE": "Machine care"
+          "eco": "Eco",
+          "auto": "Auto",
+          "quick30": "Quick 30",
+          "quick60": "Quick 60",
+          "normal90": "Normal 90°",
+          "120_min": "120 minutes",
+          "rinse": "Rinse",
+          "machine_care": "Machine care"
         }
       }
     },
@@ -233,72 +233,72 @@
       "water_hardness": {
         "name": "Water hardness",
         "state": {
-          "SOFT": "Soft",
-          "MEDIUM": "Medium",
-          "HARD": "Hard",
-          "STEP_0": "Level 0",
-          "STEP_1": "Level 1",
-          "STEP_2": "Level 2",
-          "STEP_3": "Level 3",
-          "STEP_4": "Level 4",
-          "STEP_5": "Level 5",
-          "STEP_6": "Level 6",
-          "STEP_7": "Level 7",
-          "STEP_8": "Level 8",
-          "STEP_9": "Level 9",
-          "STEP_10": "Level 10"
+          "soft": "Soft",
+          "medium": "Medium",
+          "hard": "Hard",
+          "step_0": "Level 0",
+          "step_1": "Level 1",
+          "step_2": "Level 2",
+          "step_3": "Level 3",
+          "step_4": "Level 4",
+          "step_5": "Level 5",
+          "step_6": "Level 6",
+          "step_7": "Level 7",
+          "step_8": "Level 8",
+          "step_9": "Level 9",
+          "step_10": "Level 10"
         }
       },
       "end_of_cycle_sound": {
         "name": "End-of-cycle sound",
         "state": {
-          "NO_SOUND": "No sound",
-          "SHORT_SOUND": "Short sound"
+          "no_sound": "No sound",
+          "short_sound": "Short sound"
         }
       },
       "display_on_floor": {
         "name": "Floor beam",
         "state": {
-          "GREEN": "Green",
-          "OFF": "Off"
+          "green": "Green",
+          "off": "Off"
         }
       },
       "handle_free_door_opening": {
         "name": "Handle-free door opening",
         "state": {
-          "OFF": "Off",
-          "SINGLE_PUSH": "Single push"
+          "off": "Off",
+          "single_push": "Single push"
         }
       },
       "network_interface_always_on": {
         "name": "Network interface always on",
         "state": {
-          "ON": "On",
-          "OFF": "Off"
+          "on": "On",
+          "off": "Off"
         }
       },
       "execute_command": {
         "name": "Execute command",
         "state": {
-          "ON": "On",
-          "OFF": "Off",
-          "PAUSE": "Pause",
-          "RESUME": "Resume",
-          "START": "Start",
-          "STOP": "Stop"
+          "on": "On",
+          "off": "Off",
+          "pause": "Pause",
+          "resume": "Resume",
+          "start": "Start",
+          "stop": "Stop"
         }
       },
       "program_u_i_d": {
         "name": "Program",
         "state": {
-          "ECO": "Eco",
-          "AUTO": "Auto",
-          "QUICK30": "Quick 30",
-          "QUICK60": "Quick 60",
-          "NORMAL90": "Normal 90°",
-          "120_MIN": "120 minutes",
-          "RINSE": "Rinse",
-          "MACHINE_CARE": "Machine care"
+          "eco": "Eco",
+          "auto": "Auto",
+          "quick30": "Quick 30",
+          "quick60": "Quick 60",
+          "normal90": "Normal 90°",
+          "120_min": "120 minutes",
+          "rinse": "Rinse",
+          "machine_care": "Machine care"
         }
       }
     },
@@ -309,8 +309,8 @@
       "network_interface_always_on": {
         "name": "Network interface always on",
         "state": {
-          "ON": "On",
-          "OFF": "Off"
+          "on": "On",
+          "off": "Off"
         }
       },
       "water_hardness_sensor_enable": {

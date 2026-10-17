@@ -1,0 +1,4 @@
+# Python-Bytecode gehoert nicht ins Repo: HACS laedt den Ordner 1:1 zu jedem
+# Nutzer, und die .pyc sind an die Python-Version des Erzeugers gebunden.
+__pycache__/
+*.py[cod]
