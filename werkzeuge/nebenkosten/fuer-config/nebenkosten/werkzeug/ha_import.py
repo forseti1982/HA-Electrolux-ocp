@@ -12,6 +12,7 @@ ausgabe/ha_import_status.json und wird von einem command_line-Sensor gelesen.
 Nur Standardbibliothek.
 """
 import datetime
+import hashlib
 import json
 import subprocess
 import sys
@@ -44,7 +45,7 @@ def bundle_einlesen() -> list:
     """
     ergebnis = []
     for b in sorted(EINGANG.glob("*.ndjson")):
-        geschrieben, uebersprungen = [], 0
+        geschrieben, falsch, uebersprungen = [], [], 0
         for zeile in b.read_text(encoding="utf-8").splitlines():
             zeile = zeile.strip()
             if not zeile.startswith("{"):
@@ -60,13 +61,20 @@ def bundle_einlesen() -> list:
             if not erlaubt or ".." in pfad or not pfad.endswith(".json"):
                 uebersprungen += 1
                 continue
+            inhalt = satz.get("inhalt")
+            kanon = json.dumps(inhalt, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+            ist = hashlib.sha256(kanon.encode("utf-8")).hexdigest()
+            soll = satz.get("pruefsumme")
+            if soll and soll != ist:
+                falsch.append({"pfad": pfad, "soll": soll, "ist": ist})
+                continue
             ziel = ROOT / pfad
             ziel.parent.mkdir(parents=True, exist_ok=True)
             ziel.write_text(
-                json.dumps(satz.get("inhalt"), ensure_ascii=False, indent=1) + "\n",
+                json.dumps(inhalt, ensure_ascii=False, indent=1) + "\n",
                 encoding="utf-8",
             )
-            geschrieben.append(pfad)
+            geschrieben.append({"pfad": pfad, "pruefsumme": ist, "geprueft": bool(soll)})
         ziel_b = ERLEDIGT / b.name
         if ziel_b.exists():
             ziel_b = ERLEDIGT / (b.stem + "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + b.suffix)
@@ -74,9 +82,12 @@ def bundle_einlesen() -> list:
         ergebnis.append({
             "datei": b.name,
             "modus": "buendel",
-            "status": "ok" if geschrieben else "leer",
-            "geschrieben": geschrieben,
+            "status": "fehler" if falsch else ("ok" if geschrieben else "leer"),
+            "geschrieben": [g["pfad"] for g in geschrieben],
             "anzahl_geschrieben": len(geschrieben),
+            "anzahl_geprueft": sum(1 for g in geschrieben if g["geprueft"]),
+            "pruefsummen": {g["pfad"]: g["pruefsumme"] for g in geschrieben},
+            "pruefsumme_falsch": falsch,
             "uebersprungen": uebersprungen,
             "verschoben_nach": "eingang/erledigt/" + ziel_b.name,
         })
@@ -96,6 +107,10 @@ def main() -> int:
     if not kandidaten:
         if buendel:
             n = sum(b["anzahl_geschrieben"] for b in buendel)
+            bad = sum(len(b["pruefsumme_falsch"]) for b in buendel)
+            if bad:
+                schreibe("fehler", f"{bad} Satz/Saetze mit falscher Pruefsumme verworfen, {n} geschrieben.", buendel)
+                return 1
             schreibe("ok", f"{n} Datei(en) aus {len(buendel)} Buendel wiederhergestellt.", buendel)
             return 0
         schreibe("leer", "Keine Datei im Eingangsordner.", [])
