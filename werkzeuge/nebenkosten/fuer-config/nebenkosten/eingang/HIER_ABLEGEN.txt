@@ -1,0 +1,1 @@
+Hier die Datei abrechnung_JJJJ-JJ.json ablegen, dann im Dashboard auf Importieren tippen.

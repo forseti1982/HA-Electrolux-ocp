@@ -1,0 +1,200 @@
+# ============================================================================
+# Nebenkosten Mietobjekt - Anbindung an Home Assistant
+# Ablage: /config/packages/nebenkosten.yaml
+#
+# Voraussetzung in configuration.yaml (einmalig, falls noch nicht vorhanden):
+#
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# Die Daten liegen unter /config/nebenkosten/ und sind damit NICHT ueber HTTP
+# erreichbar. Nichts davon gehoert nach /config/www bzw. /local/.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Befehle: pruefen, importieren, Vorlage erzeugen
+# ----------------------------------------------------------------------------
+shell_command:
+  # EINMALIG: entpackt /config/nebenkosten-ha-paket.zip nach /config/nebenkosten/.
+  # Danach kann die Zip geloescht werden. Nutzt Pythons zipfile, weil der
+  # Home-Assistant-Container kein unzip mitbringt.
+  nk_setup: >-
+    python3 -c "import glob,zipfile,shutil,pathlib;
+    z=(sorted(glob.glob('/config/**/nebenkosten-ha-paket.zip', recursive=True))+[''])[0];
+    d=pathlib.Path('/config');
+    zipfile.ZipFile(z).extractall(d/'_nk');
+    shutil.move(str(d/'_nk'/'fuer-config'/'nebenkosten'), str(d/'nebenkosten'));
+    shutil.rmtree(d/'_nk');
+    [ (d/'nebenkosten'/q).mkdir(parents=True, exist_ok=True) for q in ('eingang','eingang/erledigt') ];
+    print('entpackt aus ' + z)"
+
+  # Prueft alle Dateien im Eingangsordner, speichert nichts.
+  nk_pruefen: "python3 /config/nebenkosten/werkzeug/ha_import.py pruefen"
+
+  # Prueft und uebernimmt. Erfolgreiche Dateien wandern nach eingang/erledigt/.
+  nk_import: "python3 /config/nebenkosten/werkzeug/ha_import.py import"
+
+  # Wie oben, ueberschreibt aber ein bereits vorhandenes Jahr. Die alte Fassung
+  # bleibt als .bak liegen. Nur ueber den Knopf mit Rueckfrage aufrufen.
+  nk_import_ersetzen: "python3 /config/nebenkosten/werkzeug/ha_import.py import --ersetzen"
+
+  # Erzeugt vorlagen/abrechnung_JJJJ-JJ.json aus dem Vorjahr.
+  # jahr wird auf Ziffern und Schraegstrich beschraenkt. Ohne diesen Filter
+  # koennte jeder, der den Dienst aufrufen darf, beliebige Shell-Befehle
+  # einschleusen - die Variable landet sonst ungeprueft in der Kommandozeile.
+  nk_vorlage: >-
+    python3 /config/nebenkosten/werkzeug/nk.py vorlage
+    "{{ jahr | regex_replace('[^0-9/]', '') }}"
+
+  # Baut ausgabe/ komplett neu aus daten/. Fuer den Fall, dass von Hand in
+  # daten/ geaendert wurde (Miete, Stammdaten, Befunde).
+  nk_build: "python3 /config/nebenkosten/werkzeug/nk.py build"
+
+# ----------------------------------------------------------------------------
+# Daten: je ein Sensor pro Datensatz aus ausgabe/
+#
+# Der Zustand ist die Zeilenzahl, die Daten liegen im Attribut "rows".
+# ha_json.py verpackt das JSON-Array in ein Objekt, weil json_attributes ein
+# Objekt verlangt. scan_interval ist bewusst taeglich: die Zahlen aendern sich
+# einmal im Jahr. Nach jedem Import ruft das Skript homeassistant.update_entity.
+# ----------------------------------------------------------------------------
+command_line:
+  - sensor:
+      name: NK Kosten
+      unique_id: nk_kosten
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/kosten.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Jahre
+      unique_id: nk_jahre
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/jahre.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Positionen
+      unique_id: nk_positionen
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/positionen.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Wasser
+      unique_id: nk_wasser
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/wasser.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Techem
+      unique_id: nk_techem
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/techem.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Liegenschaft
+      unique_id: nk_liegenschaft
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/liegenschaft.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Pruefungen
+      unique_id: nk_pruefungen
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/pruefungen.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Befunde
+      unique_id: nk_befunde
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/befunde.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Wohnkosten
+      unique_id: nk_wohnkosten
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/wohnkosten.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Miete Monat
+      unique_id: nk_miete_monat
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/miete_monat.json"
+      value_template: "{{ value_json.n }}"
+      json_attributes: [rows]
+      unit_of_measurement: Zeilen
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Kennzahlen
+      unique_id: nk_kennzahlen
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/kennzahlen.json"
+      value_template: "{{ value_json.rows[0].letztes_jahr }}"
+      json_attributes: [rows]
+      scan_interval: 86400
+      command_timeout: 30
+
+  - sensor:
+      name: NK Import Status
+      unique_id: nk_import_status
+      command: "python3 /config/nebenkosten/werkzeug/ha_json.py /config/nebenkosten/ausgabe/ha_import_status.json"
+      value_template: "{{ value_json.zustand | default('unbekannt') }}"
+      json_attributes: [meldung, dateien, anzahl, zeitpunkt, fehler]
+      scan_interval: 3600
+      command_timeout: 30
+
+# ----------------------------------------------------------------------------
+# Recorder: diese Sensoren NICHT in die Datenbank.
+#
+# miete_monat allein traegt rund 45 KB im Attribut. Gespeicherter Verlauf
+# braeuchte das nie, denn die Zahlen aendern sich einmal im Jahr.
+# ----------------------------------------------------------------------------
+recorder:
+  exclude:
+    entities:
+      - sensor.nk_kosten
+      - sensor.nk_jahre
+      - sensor.nk_positionen
+      - sensor.nk_wasser
+      - sensor.nk_techem
+      - sensor.nk_liegenschaft
+      - sensor.nk_pruefungen
+      - sensor.nk_befunde
+      - sensor.nk_wohnkosten
+      - sensor.nk_miete_monat
+      - sensor.nk_kennzahlen
+      - sensor.nk_import_status

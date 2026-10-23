@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nk-mietobjekt/1",
+  "title": "Nebenkostenabrechnung Mietobjekt – ein Abrechnungsjahr",
+  "description": "Eine Datei pro Abrechnungsjahr (01.10.–30.09.). Alle Beträge in CHF als JSON-Zahl mit Punkt, ohne Tausender-Apostroph. Werte genau wie gedruckt, nichts runden.",
+  "type": "object",
+  "required": [
+    "format",
+    "jahr",
+    "periode",
+    "zeitanteil",
+    "erfasst",
+    "haushalt",
+    "wohnung",
+    "einstellplaetze",
+    "techem",
+    "wasser",
+    "liegenschaft",
+    "strom",
+    "notizen"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "nk-mietobjekt/1"
+    },
+    "jahr": {
+      "type": "string",
+      "pattern": "^[0-9]{4}/[0-9]{2}$",
+      "examples": [
+        "2024/25"
+      ]
+    },
+    "periode": {
+      "type": "object",
+      "required": [
+        "von",
+        "bis"
+      ],
+      "properties": {
+        "von": {
+          "type": "string",
+          "format": "date"
+        },
+        "bis": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "zeitanteil": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Nur bei Ein- oder Auszug im Jahr",
+      "properties": {
+        "tage_mieter": {
+          "type": "number"
+        },
+        "tage_periode": {
+          "type": "number"
+        },
+        "hinweis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "erfasst": {
+      "type": "object",
+      "required": [
+        "am",
+        "von",
+        "geprueft"
+      ],
+      "properties": {
+        "am": {
+          "type": "string",
+          "format": "date"
+        },
+        "von": {
+          "type": "string"
+        },
+        "geprueft": {
+          "type": "boolean"
+        }
+      }
+    },
+    "haushalt": {
+      "type": "object",
+      "required": [
+        "personen"
+      ],
+      "properties": {
+        "personen": {
+          "type": "number"
+        },
+        "hinweis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "wohnung": {
+      "type": "object",
+      "required": [
+        "seiten",
+        "positionen",
+        "honorar",
+        "total_gedruckt",
+        "akonto",
+        "saldo"
+      ],
+      "properties": {
+        "seiten": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "positionen": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "kategorie",
+              "kostenpool",
+              "schluessel_mein",
+              "schluessel_total",
+              "einheit",
+              "betrag",
+              "davon_honorar",
+              "quelle"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "Bezeichnung wie gedruckt"
+              },
+              "kategorie": {
+                "enum": [
+                  "Heizung",
+                  "Warmwasser",
+                  "Wasser/Abwasser",
+                  "Allg. Nebenkosten",
+                  "Lift",
+                  "TV-Gebühren",
+                  "Verwaltungshonorar"
+                ]
+              },
+              "kostenpool": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "schluessel_mein": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "schluessel_total": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "einheit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "betrag": {
+                "type": "number"
+              },
+              "davon_honorar": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "nur Format in_pools; leer lassen = wird aus honorar.pools berechnet"
+              },
+              "quelle": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Beleg dieser Zahl: Seiten-ID (z. B. NK7-003-002) oder Dokument + Seite"
+              }
+            }
+          }
+        },
+        "honorar": {
+          "type": "object",
+          "required": [
+            "format",
+            "satz_pct",
+            "mwst_pct",
+            "pools"
+          ],
+          "properties": {
+            "format": {
+              "enum": [
+                "separat",
+                "in_pools"
+              ],
+              "description": "separat = eigene Position Verwaltungshonorar (bis 2020/21); in_pools = in den Kostenpools enthalten (ab 2021/22)"
+            },
+            "satz_pct": {
+              "type": "number"
+            },
+            "mwst_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "pools": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "description": "in_pools: Honorarbetrag je Pool, Schlüssel = label der Position"
+            }
+          }
+        },
+        "total_gedruckt": {
+          "type": "number"
+        },
+        "akonto": {
+          "type": "number"
+        },
+        "saldo": {
+          "type": "number",
+          "description": "total_gedruckt − akonto: positiv = Nachzahlung, negativ = Guthaben"
+        }
+      }
+    },
+    "einstellplaetze": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "platz",
+          "kostenpool",
+          "anteil",
+          "total",
+          "akonto",
+          "saldo",
+          "quelle"
+        ],
+        "properties": {
+          "platz": {
+            "enum": [
+              "EP 17",
+              "EP 19"
+            ]
+          },
+          "kostenpool": {
+            "type": "number"
+          },
+          "anteil": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number",
+            "description": "inkl. Honorar"
+          },
+          "akonto": {
+            "type": "number"
+          },
+          "saldo": {
+            "type": "number",
+            "description": "total − akonto (negativ = Guthaben)"
+          },
+          "quelle": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Beleg dieser Zahl: Seiten-ID (z. B. NK7-003-002) oder Dokument + Seite"
+          }
+        }
+      }
+    },
+    "techem": {
+      "type": "object",
+      "required": [
+        "quelle",
+        "energie_kwh",
+        "hz_einh_total",
+        "hz_kwh_mein",
+        "ww_m3_total",
+        "ww_m3_mein",
+        "promille_total",
+        "ww_promille_total"
+      ],
+      "properties": {
+        "quelle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Beleg dieser Zahl: Seiten-ID (z. B. NK7-003-002) oder Dokument + Seite"
+        },
+        "energie_kwh": {
+          "type": "number",
+          "description": "Fernwärme Gesamtverbrauch kWh"
+        },
+        "hz_einh_total": {
+          "type": "number",
+          "description": "Heizung Verbrauchseinheiten Objekt"
+        },
+        "hz_kwh_mein": {
+          "type": "number"
+        },
+        "hz_promille_verbr": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "hz_promille_total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ww_m3_total": {
+          "type": "number"
+        },
+        "ww_m3_mein": {
+          "type": "number"
+        },
+        "ww_promille": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ww_promille_total": {
+          "type": "number"
+        },
+        "promille_total": {
+          "type": "number"
+        },
+        "hz_zaehler": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[alt, neu]"
+        },
+        "ww_zaehler": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[alt, neu]"
+        }
+      }
+    },
+    "wasser": {
+      "type": "object",
+      "required": [
+        "kosten_haeuser_8_10_12",
+        "kosten_haeuser_14_16",
+        "umlage_pct_8_10_12",
+        "warmwasser_pool",
+        "quelle"
+      ],
+      "properties": {
+        "kosten_haeuser_8_10_12": {
+          "type": "number"
+        },
+        "kosten_haeuser_14_16": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "aus Kostenzusammenstellung, sonst null"
+        },
+        "umlage_pct_8_10_12": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Umlage-% laut Mieterabrechnung, wenn keine Kostenzusammenstellung vorliegt"
+        },
+        "warmwasser_pool": {
+          "type": "number"
+        },
+        "quelle": {
+          "type": "string"
+        }
+      }
+    },
+    "liegenschaft": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "gruppen": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "gruppe",
+              "betrag"
+            ],
+            "properties": {
+              "gruppe": {
+                "type": "string"
+              },
+              "betrag": {
+                "type": "number"
+              },
+              "quelle": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "gesamttotal": {
+          "type": "number"
+        },
+        "quelle": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "strom": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "periode": {
+          "type": "string"
+        },
+        "kwh": {
+          "type": "number"
+        },
+        "energie": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "netz": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "abgaben": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total": {
+          "type": "number"
+        },
+        "akonto": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rechnung": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quelle": {
+          "type": "string"
+        }
+      }
+    },
+    "notizen": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

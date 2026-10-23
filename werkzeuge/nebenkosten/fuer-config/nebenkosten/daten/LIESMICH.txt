@@ -1,0 +1,1 @@
+Dieser Ordner nimmt die Jahresdaten auf. Er kommt absichtlich leer.

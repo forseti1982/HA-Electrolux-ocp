@@ -1,0 +1,1 @@
+Hier legt nk.py build die Dateien fuer die Sensoren ab.
